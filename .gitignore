@@ -1,0 +1,6 @@
+.agents/
+.codex/
+.worktrees/
+work/
+*.tmp
+*.log
