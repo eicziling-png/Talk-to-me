@@ -257,6 +257,109 @@ h1 {
   font-weight: 700;
 }
 
+.chat-workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.chat-header,
+.chat-composer,
+.session-notice,
+.export-box {
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1rem;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.chat-transcript {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 12rem;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 1rem;
+}
+
+.empty-transcript {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.chat-message {
+  max-width: 48rem;
+  border-radius: 18px;
+  padding: 0.85rem 1rem;
+  line-height: 1.65;
+}
+
+.chat-message.user {
+  justify-self: end;
+  background: rgba(29, 111, 115, 0.12);
+}
+
+.chat-message.assistant {
+  justify-self: start;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.message-role {
+  margin: 0 0 0.25rem;
+  color: var(--color-accent-strong);
+  font-weight: 800;
+}
+
+.incomplete-marker {
+  color: #8a4b10;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.chat-composer {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.chat-composer textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 0.85rem;
+}
+
+.composer-actions,
+.retry-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.chat-workspace button {
+  min-height: 2.5rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-accent-strong);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 1rem;
+}
+
+.chat-workspace button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 640px) {
   .home-shell {
     align-items: start;
