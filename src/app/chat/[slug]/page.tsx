@@ -39,6 +39,9 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
 
   return (
     <main className="page-shell">
+      <Link className="back-link" href="/about">
+        安全与隐私说明
+      </Link>
       <ChatWorkspace
         expert={{ slug: expert.slug, nameEn: expert.nameEn, nameZh: expert.nameZh }}
         mode={mode}

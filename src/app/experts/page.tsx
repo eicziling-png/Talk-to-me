@@ -16,6 +16,9 @@ export default function ExpertsPage() {
         <Link className="back-link" href="/">
           Back home
         </Link>
+        <Link className="back-link" href="/about">
+          安全与隐私说明
+        </Link>
       </section>
 
       <section aria-label="Expert personas" className="expert-grid">

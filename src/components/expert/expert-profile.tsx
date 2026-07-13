@@ -11,9 +11,14 @@ type ExpertProfileProps = {
 export function ExpertProfile({ expert }: ExpertProfileProps) {
   return (
     <main className="page-shell">
-      <Link className="back-link" href="/experts">
-        Return to expert list
-      </Link>
+      <div className="link-row">
+        <Link className="back-link" href="/experts">
+          Return to expert list
+        </Link>
+        <Link className="back-link" href="/about">
+          安全与隐私说明
+        </Link>
+      </div>
       <article className="profile-panel">
         <header className="profile-header">
           <div className="portrait-placeholder portrait-large" aria-hidden="true">
