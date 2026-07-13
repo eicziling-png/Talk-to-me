@@ -1,6 +1,11 @@
 .agents/
 .codex/
+.superpowers/
 .worktrees/
 work/
+node_modules/
+.next/
+playwright-report/
+test-results/
 *.tmp
 *.log
