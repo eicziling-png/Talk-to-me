@@ -4,26 +4,10 @@ import { getExpert } from "@/domain/experts/registry";
 import { assessInput } from "@/domain/safety/classify-input";
 import { buildSafetyResponse } from "@/domain/safety/crisis-response";
 import { reviewOutput } from "@/domain/safety/review-output";
+import type { KnowledgeProvider } from "@/server/knowledge/types";
+import type { ModelProvider } from "@/server/models/types";
 
-import { buildModelMessages, type ModelMessage } from "./build-messages";
-
-export type ModelChunk = {
-  text: string;
-};
-
-export type ModelProvider = {
-  stream(messages: ModelMessage[], signal?: AbortSignal): AsyncIterable<ModelChunk>;
-};
-
-export type KnowledgeItem = {
-  title: string;
-  content: string;
-  source?: string;
-};
-
-export type KnowledgeProvider = {
-  search(expert: string, query: string): Promise<KnowledgeItem[]>;
-};
+import { buildModelMessages } from "./build-messages";
 
 export type ChatServiceDependencies = {
   modelProvider: ModelProvider;
