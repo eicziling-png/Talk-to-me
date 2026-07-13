@@ -1,11 +1,13 @@
+import Link from "next/link";
+
 const expertNames = [
-  "弗洛伊德",
-  "荣格",
-  "比昂",
-  "克莱因",
-  "温尼科特",
-  "科胡特",
-  "欧文·亚隆"
+  "Sigmund Freud",
+  "Carl Jung",
+  "Wilfred Bion",
+  "Melanie Klein",
+  "Donald Winnicott",
+  "Heinz Kohut",
+  "Irvin Yalom"
 ];
 
 export default function Home() {
@@ -25,6 +27,9 @@ export default function Home() {
             <li key={name}>{name}</li>
           ))}
         </ul>
+        <Link className="button-link home-cta" href="/experts">
+          Explore the seven expert personas
+        </Link>
       </section>
     </main>
   );
