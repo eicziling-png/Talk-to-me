@@ -8,6 +8,7 @@
     "build": "next build",
     "lint": "eslint .",
     "test": "vitest run",
+    "eval:live": "vitest run src/tests/evaluations/live-provider-sampling.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
