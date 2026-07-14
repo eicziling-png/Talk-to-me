@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "build:next": "next build",
     "lint": "eslint .",
     "test": "vitest run",
     "eval:live": "vitest run src/tests/evaluations/live-provider-sampling.test.ts",
@@ -13,11 +14,12 @@
   },
   "dependencies": {
     "next": "16.2.10",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
     "@next/eslint-plugin-next": "16.2.10",
     "@playwright/test": "1.54.2",
     "@testing-library/jest-dom": "6.6.4",
@@ -26,13 +28,17 @@
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
     "@vitejs/plugin-react": "4.6.0",
+    "@vitejs/plugin-rsc": "0.5.26",
     "eslint": "9.32.0",
     "eslint-config-next": "16.2.10",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
     "jsdom": "26.1.0",
     "typescript": "5.8.3",
-    "vitest": "3.2.4"
+    "vinext": "0.0.50",
+    "vite": "8.0.13",
+    "vitest": "3.2.4",
+    "wrangler": "4.92.0"
   },
   "packageManager": "pnpm@11.7.0"
 }
