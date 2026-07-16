@@ -139,6 +139,39 @@ describe("POST /api/chat", () => {
     expect(events.at(-1)).toMatchObject({ riskLevel: "S3", outcome: "streamed" });
   });
 
+  it("streams an educational fallback response when model credentials are absent", async () => {
+    resetChatRouteForTest();
+    configureChatRouteForTest({
+      knowledgeProvider: new NullKnowledgeProvider(),
+      telemetryLogger: {
+        log: vi.fn((event: TelemetryEvent) => {
+          events.push(event);
+        })
+      },
+      requestIdFactory: () => "req-fallback-model",
+      now: () => 3_000,
+      timeoutMs: 50
+    });
+
+    const response = await POST(
+      makePost({
+        ...safeRequest,
+        expertSlug: "winnicott",
+        mode: "self-reflection",
+        input: "我今天很难过"
+      })
+    );
+    const text = await readText(response);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/event-stream");
+    expect(text).toContain("Winnicott");
+    expect(text).toContain("holding environment");
+    expect(text).toContain("data:");
+    expect(text).toContain("event: done");
+    expect(events.at(-1)).toMatchObject({ riskLevel: "S0", outcome: "streamed" });
+  });
+
   it("returns 413 when the request body exceeds the route size limit", async () => {
     const response = await POST(makePost({ ...safeRequest, input: "x".repeat(40_000) }));
 

@@ -61,11 +61,26 @@ describe("model provider boundaries", () => {
     expect(mapped.message).not.toContain("sensitive details");
   });
 
-  it("validates configured provider environment at construction time", () => {
-    expect(() => createConfiguredModelProvider({})).toThrow(ModelProviderError);
-    expect(() => createConfiguredModelProvider({ OPENAI_API_KEY: "test-key" })).toThrow(
-      /OPENAI_MODEL/
+  it("uses a safe educational fallback when configured model credentials are absent", async () => {
+    const provider = createConfiguredModelProvider({});
+    const expert = getExpert("winnicott");
+
+    expect(expert).toBeDefined();
+
+    const messages = buildModelMessages(
+      {
+        expertSlug: "winnicott",
+        mode: "self-reflection",
+        input: "我今天很难过",
+        history: []
+      },
+      expert!
     );
+
+    const chunks = await collectText(provider.stream(messages));
+
+    expect(chunks.join("")).toContain("Winnicott");
+    expect(chunks.join("")).toContain("holding environment");
   });
 
   it("constructs configured provider from explicit environment without exposing secrets", () => {
