@@ -1,8 +1,7 @@
 export function SessionNotice() {
   return (
     <aside className="session-notice" role="note">
-      This conversation stays in this browser tab only. Refreshing or closing the tab clears it.
-      Avoid entering identifying details you would not want included in an export.
+      这段聊天只保留在当前页面。刷新或关闭后会清空。
     </aside>
   );
 }

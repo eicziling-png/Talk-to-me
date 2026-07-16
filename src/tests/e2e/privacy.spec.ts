@@ -18,8 +18,8 @@ test("refresh cannot restore transcript and telemetry never receives full messag
   });
 
   await page.goto("/chat/winnicott?mode=self-reflection");
-  await page.getByLabel("Message").fill(userMessage);
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByLabel("输入消息").fill(userMessage);
+  await page.getByRole("button", { name: "发送" }).click();
   await expect(page.getByText(userMessage)).toBeVisible();
   await expect(page.getByText("Private reply")).toBeVisible();
 

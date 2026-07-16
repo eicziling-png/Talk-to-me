@@ -34,16 +34,16 @@ describe("ChatWorkspace", () => {
   it("disables empty submissions", () => {
     renderWorkspace();
 
-    expect(screen.getByRole("button", { name: /send/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /发送/i })).toBeDisabled();
   });
 
-  it("sends a message and streams an assistant reply", async () => {
-    renderWorkspace();
+  it("sends a message and streams an expert reply in messenger layout", async () => {
+    const { container } = renderWorkspace();
 
-    fireEvent.change(screen.getByLabelText(/message/i), {
+    fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "How do I think about play?" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
 
     expect(fetch).toHaveBeenCalledWith(
       "/api/chat",
@@ -54,6 +54,14 @@ describe("ChatWorkspace", () => {
     await waitFor(() => {
       expect(screen.getByText("Hello there")).toBeInTheDocument();
     });
+    expect(screen.getAllByText("Donald Winnicott").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Assistant")).not.toBeInTheDocument();
+    expect(screen.queryByText("User")).not.toBeInTheDocument();
+    expect(screen.queryByText("AI")).not.toBeInTheDocument();
+    expect(container.querySelector(".chat-message.user .message-avatar")).toBeInTheDocument();
+    expect(container.querySelector(".chat-message.assistant .message-avatar")).toBeInTheDocument();
+    expect(container.querySelector(".chat-message.user .message-bubble")).toBeInTheDocument();
+    expect(container.querySelector(".chat-message.assistant .message-bubble")).toBeInTheDocument();
   });
 
   it("preserves unsent input after server failure and retries the failed message", async () => {
@@ -64,20 +72,20 @@ describe("ChatWorkspace", () => {
     vi.stubGlobal("fetch", fetchMock);
     renderWorkspace();
 
-    fireEvent.change(screen.getByLabelText(/message/i), {
+    fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "First message" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
 
-    await screen.findByText(/reply failed/i);
+    await screen.findByText("发送失败，可以点重试。");
 
-    fireEvent.change(screen.getByLabelText(/message/i), {
+    fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "Draft I do not want to lose" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /重试/i }));
 
     await screen.findByText("Recovered");
-    expect(screen.getByLabelText(/message/i)).toHaveValue("Draft I do not want to lose");
+    expect(screen.getByLabelText(/输入消息/i)).toHaveValue("Draft I do not want to lose");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -88,19 +96,19 @@ describe("ChatWorkspace", () => {
     );
     renderWorkspace();
 
-    fireEvent.change(screen.getByLabelText(/message/i), {
+    fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "Please answer slowly" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
 
-    await screen.findByRole("button", { name: /stop/i });
-    fireEvent.click(screen.getByRole("button", { name: /stop/i }));
+    await screen.findByRole("button", { name: /停止/i });
+    fireEvent.click(screen.getByRole("button", { name: /停止/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/incomplete/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/消息中断/i).length).toBeGreaterThan(0);
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /clear/i }));
+    fireEvent.click(screen.getByRole("button", { name: /清空/i }));
     expect(screen.queryByText("Please answer slowly")).not.toBeInTheDocument();
   });
 
@@ -117,18 +125,18 @@ describe("ChatWorkspace", () => {
     );
     renderWorkspace();
 
-    fireEvent.change(screen.getByLabelText(/message/i), {
+    fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "Please do not come back after clear" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
     await screen.findByText("Please do not come back after clear");
 
-    fireEvent.click(screen.getByRole("button", { name: /clear/i }));
+    fireEvent.click(screen.getByRole("button", { name: /清空/i }));
     rejectRequest(new Error("late failure"));
 
     await waitFor(() => {
-      expect(screen.queryByText(/reply failed/i)).not.toBeInTheDocument();
-      expect(screen.queryByText("Request did not complete.")).not.toBeInTheDocument();
+      expect(screen.queryByText(/发送失败/i)).not.toBeInTheDocument();
+      expect(screen.queryByText("发送失败，点重试再试一次。")).not.toBeInTheDocument();
       expect(screen.queryByText("Please do not come back after clear")).not.toBeInTheDocument();
     });
   });

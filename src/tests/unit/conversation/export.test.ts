@@ -25,12 +25,12 @@ describe("conversation export", () => {
 
     expect(markdown).toContain("# Conversation with Donald Winnicott");
     expect(markdown).toContain("Mode: self-reflection");
-    expect(markdown).toContain("User: I feel false around people.");
-    expect(markdown).toContain("Assistant: Let us think about aliveness.");
+    expect(markdown).toContain("我: I feel false around people.");
+    expect(markdown).toContain("Donald Winnicott: Let us think about aliveness.");
 
     expect(plainText).toContain("Conversation with Donald Winnicott");
     expect(plainText).toContain("Mode: self-reflection");
-    expect(plainText).toContain("User: I feel false around people.");
+    expect(plainText).toContain("我: I feel false around people.");
   });
 
   it("does not export internal prompt, safety, or provider metadata", () => {

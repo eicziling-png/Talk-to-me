@@ -31,23 +31,23 @@ test("user can select an expert, choose every mode, chat, retry, clear, export, 
   }
 
   await page.getByRole("link", { name: /self-reflection/ }).click();
-  await expect(page.getByRole("heading", { name: /Chat with Donald Winnicott/i })).toBeVisible();
-  await expect(page.getByText(/browser tab only/i)).toBeVisible();
-  await expect(page.getByRole("button", { name: /Export markdown/i })).toBeDisabled();
+  await expect(page.getByRole("heading", { name: /Donald Winnicott/i })).toBeVisible();
+  await expect(page.getByText(/当前页面/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /导出/i })).toBeDisabled();
 
-  await page.getByLabel("Message").fill("How do I think about play?");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByLabel("输入消息").fill("How do I think about play?");
+  await page.getByRole("button", { name: "发送" }).click();
   await expect(page.getByText("How do I think about play?")).toBeVisible();
   await expect(page.getByText("A held reply across turns.")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Export markdown/i })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /导出/i })).toBeEnabled();
 
   await page.unroute("**/api/chat");
   await page.route("**/api/chat", async (route) => {
     await route.fulfill({ status: 500, body: "fail" });
   });
-  await page.getByLabel("Message").fill("Please fail once");
-  await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByText(/Reply failed/i)).toBeVisible();
+  await page.getByLabel("输入消息").fill("Please fail once");
+  await page.getByRole("button", { name: "发送" }).click();
+  await expect(page.getByText("发送失败，可以点重试。")).toBeVisible();
 
   await page.unroute("**/api/chat");
   await page.route("**/api/chat", async (route) => {
@@ -56,9 +56,9 @@ test("user can select an expert, choose every mode, chat, retry, clear, export, 
       body: 'data: "Recovered"\n\nevent: done\ndata: {}\n\n'
     });
   });
-  await page.getByRole("button", { name: "Retry" }).click();
+  await page.getByRole("button", { name: "重试" }).click();
   await expect(page.getByText("Recovered")).toBeVisible();
 
-  await page.getByRole("button", { name: "Clear" }).click();
+  await page.getByRole("button", { name: "清空" }).click();
   await expect(page.getByText("How do I think about play?")).toHaveCount(0);
 });

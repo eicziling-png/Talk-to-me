@@ -9,16 +9,9 @@ type ExportButtonProps = {
 
 export function ExportButton({ session }: ExportButtonProps) {
   return (
-    <div className="export-box">
-      <p>Export reminder: review for personal information before sharing this file.</p>
-      <button
-        disabled={session.messages.length === 0}
-        onClick={() => downloadMarkdown(session)}
-        type="button"
-      >
-        Export markdown
-      </button>
-    </div>
+    <button disabled={session.messages.length === 0} onClick={() => downloadMarkdown(session)} type="button">
+      导出
+    </button>
   );
 }
 

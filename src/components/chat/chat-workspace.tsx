@@ -87,7 +87,14 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
           throw new DOMException("aborted", "AbortError");
         }
         await delay(20);
+        if (controller.signal.aborted) {
+          throw new DOMException("aborted", "AbortError");
+        }
         appendAssistantChunk(assistantMessage.id, chunk);
+      }
+
+      if (controller.signal.aborted) {
+        throw new DOMException("aborted", "AbortError");
       }
 
       setSession((current) => ({
@@ -110,7 +117,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
           message.id === assistantMessage.id
             ? {
                 ...message,
-                content: message.content || (interrupted ? "Interrupted." : "Request did not complete."),
+                content: message.content || (interrupted ? "已暂停。" : "发送失败，点重试再试一次。"),
                 complete: false
               }
             : message
@@ -158,25 +165,35 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   return (
     <section className="chat-workspace" aria-labelledby="chat-title">
       <header className="chat-header">
-        <div>
-          <p className="eyebrow">{mode}</p>
-          <h1 id="chat-title">Chat with {expert.nameEn}</h1>
-          <p className="expert-name-zh">{expert.nameZh}</p>
+        <div className="chat-contact">
+          <span className="chat-contact-avatar" aria-hidden="true">
+            🧠
+          </span>
+          <div>
+            <p className="eyebrow">正在聊天</p>
+            <h1 id="chat-title">{expert.nameEn}</h1>
+            <p className="expert-name-zh">
+              {expert.nameZh} · {mode}
+            </p>
+          </div>
         </div>
-        <button onClick={clear} type="button">
-          Clear
-        </button>
+        <div className="chat-header-actions">
+          <ExportButton session={session} />
+          <button onClick={clear} type="button">
+            清空
+          </button>
+        </div>
       </header>
 
       <SessionNotice />
-      <Transcript messages={session.messages} />
+      <Transcript expert={expert} messages={session.messages} />
 
-      {session.status === "failed" ? <p role="alert">Reply failed. You can retry.</p> : null}
-      {session.status === "interrupted" ? <p role="alert">Response interrupted.</p> : null}
+      {session.status === "failed" ? <p role="alert">发送失败，可以点重试。</p> : null}
+      {session.status === "interrupted" ? <p role="alert">消息中断。</p> : null}
 
       <div className="retry-row">
         <button disabled={!failedMessage || session.status === "streaming"} onClick={retry} type="button">
-          Retry
+          重试
         </button>
       </div>
 
@@ -188,7 +205,6 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
         showStop={session.status === "streaming"}
         value={draft}
       />
-      <ExportButton session={session} />
     </section>
   );
 }
@@ -226,7 +242,7 @@ function markLastAssistantIncomplete(messages: BrowserMessage[]): BrowserMessage
 
   return messages.map((message, index) =>
     index === lastAssistantIndex
-      ? { ...message, content: message.content || "Interrupted.", complete: false }
+      ? { ...message, content: message.content || "已暂停。", complete: false }
       : message
   );
 }

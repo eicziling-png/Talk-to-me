@@ -23,21 +23,25 @@ export function Composer({
         onSubmit();
       }}
     >
-      <label htmlFor="chat-message">Message</label>
+      <label className="sr-only" htmlFor="chat-message">
+        输入消息
+      </label>
       <textarea
+        aria-label="输入消息"
         disabled={disabled}
         id="chat-message"
         onChange={(event) => onChange(event.target.value)}
-        rows={4}
+        placeholder="说点什么…"
+        rows={1}
         value={value}
       />
       <div className="composer-actions">
         <button disabled={disabled || value.trim().length === 0} type="submit">
-          Send
+          发送
         </button>
         {showStop ? (
           <button onClick={onStop} type="button">
-            Stop
+            停止
           </button>
         ) : null}
       </div>

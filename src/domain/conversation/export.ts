@@ -9,7 +9,7 @@ export function toMarkdown(session: BrowserSession): string {
     "",
     "## Transcript",
     "",
-    ...session.messages.map(formatMarkdownMessage)
+    ...session.messages.map((message) => formatMarkdownMessage(message, session.expertName))
   ].join("\n");
 }
 
@@ -21,20 +21,20 @@ export function toPlainText(session: BrowserSession): string {
     "",
     "Transcript",
     "",
-    ...session.messages.map(formatPlainMessage)
+    ...session.messages.map((message) => formatPlainMessage(message, session.expertName))
   ].join("\n");
 }
 
-function formatMarkdownMessage(message: BrowserMessage): string {
-  const label = message.role === "user" ? "User" : "Assistant";
-  const suffix = message.role === "assistant" && message.complete === false ? " _(incomplete)_" : "";
+function formatMarkdownMessage(message: BrowserMessage, expertName: string): string {
+  const label = message.role === "user" ? "我" : expertName;
+  const suffix = message.role === "assistant" && message.complete === false ? " _（消息中断）_" : "";
 
   return `${label}: ${message.content}${suffix}`;
 }
 
-function formatPlainMessage(message: BrowserMessage): string {
-  const label = message.role === "user" ? "User" : "Assistant";
-  const suffix = message.role === "assistant" && message.complete === false ? " (incomplete)" : "";
+function formatPlainMessage(message: BrowserMessage, expertName: string): string {
+  const label = message.role === "user" ? "我" : expertName;
+  const suffix = message.role === "assistant" && message.complete === false ? "（消息中断）" : "";
 
   return `${label}: ${message.content}${suffix}`;
 }
