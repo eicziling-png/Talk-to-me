@@ -103,4 +103,33 @@ describe("ChatWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: /clear/i }));
     expect(screen.queryByText("Please answer slowly")).not.toBeInTheDocument();
   });
+
+  it("ignores late request failures after the transcript is cleared", async () => {
+    let rejectRequest: (error: Error) => void = () => undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((_resolve, reject) => {
+            rejectRequest = reject;
+          })
+      )
+    );
+    renderWorkspace();
+
+    fireEvent.change(screen.getByLabelText(/message/i), {
+      target: { value: "Please do not come back after clear" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await screen.findByText("Please do not come back after clear");
+
+    fireEvent.click(screen.getByRole("button", { name: /clear/i }));
+    rejectRequest(new Error("late failure"));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/reply failed/i)).not.toBeInTheDocument();
+      expect(screen.queryByText("Request did not complete.")).not.toBeInTheDocument();
+      expect(screen.queryByText("Please do not come back after clear")).not.toBeInTheDocument();
+    });
+  });
 });

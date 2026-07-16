@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vinext dev",
+    "dev": "next dev",
+    "dev:sites": "vinext dev",
     "build": "vinext build",
     "build:next": "next build",
     "lint": "eslint .",

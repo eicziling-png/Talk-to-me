@@ -98,6 +98,9 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
         )
       }));
     } catch {
+      if (abortRef.current !== controller) {
+        return;
+      }
       const interrupted = controller.signal.aborted;
       setFailedMessage(content);
       setSession((current) => ({
@@ -114,7 +117,9 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
         )
       }));
     } finally {
-      abortRef.current = null;
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
     }
   }
 
@@ -143,7 +148,9 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   }
 
   function clear(): void {
-    abortRef.current?.abort();
+    const activeController = abortRef.current;
+    abortRef.current = null;
+    activeController?.abort();
     setFailedMessage(null);
     setSession(createBrowserSession({ expertName: expert.nameEn, expertSlug: expert.slug, mode }));
   }
