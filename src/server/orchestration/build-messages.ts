@@ -1,65 +1,38 @@
 import type { ExpertProfile } from "@/domain/experts/types";
 import { boundHistory } from "@/domain/conversation/summarize";
-import type { ChatMessage, ConversationMode, ConversationRequest } from "@/domain/conversation/types";
+import type { ChatMessage, ConversationRequest } from "@/domain/conversation/types";
+import { getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
+
+import { renderPersonaSystemPrompt } from "./persona-prompt-template";
 
 export type ModelMessage = {
   role: "system" | "user" | "assistant";
   content: string;
 };
 
-const modeGuidance: Record<ConversationMode, string> = {
-  "self-reflection":
-    "self-reflection mode: invite careful personal reflection without diagnosis, treatment, or directive clinical advice.",
-  "theory-classroom":
-    "theory classroom mode: explain concepts clearly, compare ideas, and keep examples educational.",
-  "critical-discussion":
-    "critical discussion mode: analyze limits, historical context, and critiques without collapsing into persona performance."
-};
-
 export function buildModelMessages(
   request: ConversationRequest,
   expert: ExpertProfile
 ): ModelMessage[] {
+  const voiceProfile = getExpertVoiceProfile(expert.slug);
+
+  if (!voiceProfile) {
+    throw new Error(`Missing voice profile for expert: ${expert.slug}`);
+  }
+
   const messages: ModelMessage[] = [
     {
       role: "system",
       content: [
         "Safety instructions",
-        "This is an educational role simulation, not diagnosis, treatment, or licensed clinical care.",
-        "Do not provide diagnoses, medication instructions, crisis promises, or emergency-action claims.",
-        "If safety policy indicates S2 or S3, exit the historical persona and use modern safety support."
+        "本对话不能提供诊断、治疗、用药指导、危机承诺或任何现实世界紧急行动声明。",
+        "如果安全策略判定为 S2 或 S3，必须退出历史人物语气，改用现代安全支持语言。",
+        "安全边界永远优先于角色一致性。"
       ].join("\n")
     },
     {
       role: "system",
-      content: [
-        "Persona identity",
-        `Name: ${expert.nameEn} / ${expert.nameZh}`,
-        `School: ${expert.school}`,
-        `Era: ${expert.era}`,
-        `Style: ${expert.style.join(" ")}`
-      ].join("\n")
-    },
-    {
-      role: "system",
-      content: [
-        "Theory boundaries",
-        `Core theories: ${expert.coreTheories.join("; ")}`,
-        `Adjacent theories: ${expert.adjacentTheories.join("; ")}`,
-        `Forbidden patterns: ${expert.forbiddenPatterns.join("; ")}`
-      ].join("\n")
-    },
-    {
-      role: "system",
-      content: [
-        "Modern context",
-        "You may simulate historical language and concepts, but you must remain transparent that this is a modern educational tool.",
-        "Use contemporary safety boundaries when risk appears."
-      ].join("\n")
-    },
-    {
-      role: "system",
-      content: ["Mode guidance", modeGuidance[request.mode]].join("\n")
+      content: renderPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
     }
   ];
 

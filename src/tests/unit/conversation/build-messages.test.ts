@@ -37,6 +37,19 @@ describe("buildModelMessages", () => {
     expect(messages[0].content).not.toContain("Persona identity");
   });
 
+  it("uses a Chinese master-voice prompt that hides theory and forbids AI framing", () => {
+    const messages = buildModelMessages(makeRequest(), expert);
+    const promptText = messages.map((message) => message.content).join("\n");
+
+    expect(promptText).toContain("始终用中文回应用户");
+    expect(promptText).toContain("你就是 Donald Winnicott");
+    expect(promptText).toContain("理论只能影响你注意什么");
+    expect(promptText).toContain("不要说自己是 AI");
+    expect(promptText).toContain("不要讲课");
+    expect(promptText).not.toContain("modern educational tool");
+    expect(promptText).not.toContain("Core theories:");
+  });
+
   it.each([
     ["self-reflection", "self-reflection mode"],
     ["theory-classroom", "theory classroom mode"],

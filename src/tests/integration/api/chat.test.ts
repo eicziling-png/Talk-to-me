@@ -165,8 +165,10 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/event-stream");
-    expect(text).toContain("Winnicott");
-    expect(text).toContain("holding environment");
+    expect(text).toContain("听起来");
+    expect(text).toContain("难过");
+    expect(text).not.toContain("Winnicott");
+    expect(text).not.toContain("holding environment");
     expect(text).toContain("data:");
     expect(text).toContain("event: done");
     expect(events.at(-1)).toMatchObject({ riskLevel: "S0", outcome: "streamed" });

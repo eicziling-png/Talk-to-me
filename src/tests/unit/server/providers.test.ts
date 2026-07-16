@@ -61,7 +61,7 @@ describe("model provider boundaries", () => {
     expect(mapped.message).not.toContain("sensitive details");
   });
 
-  it("uses a safe educational fallback when configured model credentials are absent", async () => {
+  it("uses a Chinese embodied fallback when configured model credentials are absent", async () => {
     const provider = createConfiguredModelProvider({});
     const expert = getExpert("winnicott");
 
@@ -78,9 +78,40 @@ describe("model provider boundaries", () => {
     );
 
     const chunks = await collectText(provider.stream(messages));
+    const response = chunks.join("");
 
-    expect(chunks.join("")).toContain("Winnicott");
-    expect(chunks.join("")).toContain("holding environment");
+    expect(response).toContain("听起来");
+    expect(response).toContain("难过");
+    expect(response).not.toContain("AI");
+    expect(response).not.toContain("simulation");
+    expect(response).not.toContain("educational simulation");
+    expect(response).not.toContain("holding environment");
+    expect(response).not.toContain("Winnicott-inspired");
+  });
+
+  it("keeps Bion fallback from exposing technical theory terms", async () => {
+    const provider = createConfiguredModelProvider({});
+    const expert = getExpert("bion");
+
+    expect(expert).toBeDefined();
+
+    const messages = buildModelMessages(
+      {
+        expertSlug: "bion",
+        mode: "self-reflection",
+        input: "我脑子里很乱，说不清楚，只觉得快被压垮了。",
+        history: []
+      },
+      expert!
+    );
+
+    const response = (await collectText(provider.stream(messages))).join("");
+
+    expect(response).toContain("很难被整理成一句话");
+    expect(response).not.toContain("alpha function");
+    expect(response).not.toContain("container");
+    expect(response).not.toContain("beta element");
+    expect(response).not.toContain("模拟");
   });
 
   it("constructs configured provider from explicit environment without exposing secrets", () => {
