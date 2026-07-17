@@ -50,6 +50,50 @@ describe("buildModelMessages", () => {
     expect(promptText).not.toContain("Core theories:");
   });
 
+  it("instructs the model to reason internally but output only natural short chat", () => {
+    const messages = buildModelMessages(
+      makeRequest({ input: "我今天真的很难受。" }),
+      expert
+    );
+    const promptText = messages.map((message) => message.content).join("\n");
+
+    expect(promptText).toContain("Internal response protocol");
+    expect(promptText).toContain("理解用户说了什么");
+    expect(promptText).toContain("表面的事件");
+    expect(promptText).toContain("隐藏需求");
+    expect(promptText).toContain("只输出自然聊天");
+    expect(promptText).toContain("普通聊天：20-80字");
+    expect(promptText).toContain("深入探索：80-200字");
+    expect(promptText).toContain("禁止小标题");
+    expect(promptText).toContain("禁止列表");
+    expect(promptText).toContain("陪伴 > 理解 > 探索 > 分析");
+  });
+
+  it("adds turn-level response style guidance for short ordinary chats", () => {
+    const messages = buildModelMessages(
+      makeRequest({ mode: "self-reflection", input: "我今天真的很难受。" }),
+      expert
+    );
+
+    expect(messages.map((message) => message.content).join("\n")).toContain(
+      "本轮优先普通聊天，回复 20-80 字"
+    );
+  });
+
+  it("adds turn-level response style guidance for deeper exploration modes", () => {
+    const messages = buildModelMessages(
+      makeRequest({
+        mode: "critical-discussion",
+        input: "我总觉得自己很失败，也很想知道这种感觉为什么总是反复出现。"
+      }),
+      expert
+    );
+
+    expect(messages.map((message) => message.content).join("\n")).toContain(
+      "本轮可以深入探索，回复 80-200 字"
+    );
+  });
+
   it.each([
     ["self-reflection", "self-reflection mode"],
     ["theory-classroom", "theory classroom mode"],

@@ -114,6 +114,33 @@ describe("model provider boundaries", () => {
     expect(response).not.toContain("模拟");
   });
 
+  it("keeps fallback replies conversational and free of report formatting", async () => {
+    const provider = createConfiguredModelProvider({});
+    const expert = getExpert("freud");
+
+    expect(expert).toBeDefined();
+
+    const messages = buildModelMessages(
+      {
+        expertSlug: "freud",
+        mode: "self-reflection",
+        input: "我觉得自己很失败。",
+        history: []
+      },
+      expert!
+    );
+
+    const response = (await collectText(provider.stream(messages))).join("");
+
+    expect(response.length).toBeLessThanOrEqual(200);
+    expect(response).not.toMatch(/#{1,6}\s/);
+    expect(response).not.toMatch(/\n\s*[-*]\s/);
+    expect(response).not.toContain("Step 1");
+    expect(response).not.toContain("分析过程");
+    expect(response).not.toContain("根据");
+    expect(response).toMatch(/[？?]/);
+  });
+
   it("constructs configured provider from explicit environment without exposing secrets", () => {
     const provider = createConfiguredModelProvider({
       OPENAI_API_KEY: "secret-key",
