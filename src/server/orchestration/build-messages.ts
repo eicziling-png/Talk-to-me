@@ -3,6 +3,7 @@ import { boundHistory } from "@/domain/conversation/summarize";
 import type { ChatMessage, ConversationRequest } from "@/domain/conversation/types";
 import { getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
 
+import { renderConversationEngineGuidance } from "./conversation-engine";
 import { renderPersonaSystemPrompt } from "./persona-prompt-template";
 
 export type ModelMessage = {
@@ -36,7 +37,7 @@ export function buildModelMessages(
     },
     {
       role: "system",
-      content: renderTurnResponseGuidance(request)
+      content: renderConversationEngineGuidance(request)
     }
   ];
 
@@ -71,20 +72,6 @@ export function buildModelMessages(
   });
 
   return messages;
-}
-
-function renderTurnResponseGuidance(request: ConversationRequest): string {
-  const shouldExploreDeeply =
-    request.mode !== "self-reflection" || [...request.input.trim()].length > 45;
-
-  return [
-    "Response style for this turn",
-    shouldExploreDeeply
-      ? "本轮可以深入探索，回复 80-200 字。"
-      : "本轮优先普通聊天，回复 20-80 字。",
-    "不输出小标题、列表、分析步骤或方法说明。",
-    "像有阅历、有洞察力的朋友自然接话。"
-  ].join("\n");
 }
 
 function formatHistoryMessage(message: ChatMessage): ModelMessage {

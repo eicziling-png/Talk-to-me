@@ -71,13 +71,14 @@ describe("buildModelMessages", () => {
 
   it("adds turn-level response style guidance for short ordinary chats", () => {
     const messages = buildModelMessages(
-      makeRequest({ mode: "self-reflection", input: "我今天真的很难受。" }),
+      makeRequest({ mode: "self-reflection", input: "你好" }),
       expert
     );
+    const promptText = messages.map((message) => message.content).join("\n");
 
-    expect(messages.map((message) => message.content).join("\n")).toContain(
-      "本轮优先普通聊天，回复 20-80 字"
-    );
+    expect(promptText).toContain("聊天状态：Casual Conversation 普通聊天");
+    expect(promptText).toContain("不要从专家设定反推用户状态");
+    expect(promptText).toContain("本轮优先普通聊天，回复 20-80 字");
   });
 
   it("adds turn-level response style guidance for deeper exploration modes", () => {
@@ -91,6 +92,37 @@ describe("buildModelMessages", () => {
 
     expect(messages.map((message) => message.content).join("\n")).toContain(
       "本轮可以深入探索，回复 80-200 字"
+    );
+  });
+
+  it("adds life-sharing guidance before the current input", () => {
+    const messages = buildModelMessages(
+      makeRequest({ mode: "self-reflection", input: "今天工作好累。" }),
+      expert
+    );
+    const engineIndex = messages.findIndex((message) =>
+      message.content.includes("聊天状态：Life Sharing 日常分享")
+    );
+    const userInputIndex = messages.findIndex((message) =>
+      message.content.includes("Current user input")
+    );
+
+    expect(engineIndex).toBeGreaterThan(0);
+    expect(engineIndex).toBeLessThan(userInputIndex);
+    expect(messages[engineIndex]?.content).toContain("先回应事情");
+  });
+
+  it("allows explicit theory requests to be answered as theory", () => {
+    const messages = buildModelMessages(
+      makeRequest({ mode: "theory-classroom", input: "什么是荣格的集体无意识？" }),
+      expert
+    );
+
+    expect(messages.map((message) => message.content).join("\n")).toContain(
+      "聊天状态：Direct Theory Request 理论问题"
+    );
+    expect(messages.map((message) => message.content).join("\n")).toContain(
+      "可以解释理论"
     );
   });
 
