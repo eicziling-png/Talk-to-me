@@ -2,8 +2,6 @@ import Link from "next/link";
 
 import type { ExpertProfile } from "@/domain/experts/types";
 
-import { schoolLabels } from "./school-labels";
-
 type ExpertCardProps = {
   expert: ExpertProfile;
 };
@@ -19,7 +17,6 @@ export function ExpertCard({ expert }: ExpertCardProps) {
           .slice(0, 2)}
       </div>
       <div className="expert-card-body">
-        <p className="eyebrow">{schoolLabels[expert.school] ?? expert.school}</p>
         <h2>{expert.nameEn}</h2>
         <p className="expert-name-zh">{expert.nameZh}</p>
         <p className="expert-era">{expert.era}</p>

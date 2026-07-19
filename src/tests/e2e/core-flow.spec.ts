@@ -13,7 +13,9 @@ test("user can select an expert, start chatting, retry, clear, export, and use k
   page
 }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "与历史心理学家对话" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Talk to me" })).toBeVisible();
+  await expect(page.getByText("对话过去的声音，靠近此刻的自己")).toBeVisible();
+  await expect(page.getByText("历史心理学家对话")).toHaveCount(0);
   await expect(page.getByText(/不提供诊断、治疗或临床服务/)).toBeVisible();
 
   await page.keyboard.press("Tab");

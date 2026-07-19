@@ -8,6 +8,7 @@ test("mobile layout keeps primary navigation, expert cards, and safety copy usab
   await page.goto("/");
   await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible();
   await expect(page.getByRole("link", { name: "安全与隐私说明" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Talk to me" })).toBeVisible();
 
   await expect(page.getByRole("article", { name: /Donald Winnicott/i })).toBeVisible();
 

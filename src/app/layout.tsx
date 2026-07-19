@@ -3,8 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "与历史心理学家对话",
-  description: "面向心理学教育和角色模拟的历史心理学家对话工具。"
+  title: "Talk to me",
+  description: "对话过去的声音，靠近此刻的自己。"
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
         {children}
         <footer className="site-footer">
           <Link href="/about">安全与隐私说明</Link>
-          <span>与历史心理学家对话</span>
+          <span>Talk to me</span>
         </footer>
       </body>
     </html>

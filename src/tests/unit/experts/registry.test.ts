@@ -55,7 +55,7 @@ describe("expert registry", () => {
   it("contains exactly seven unique expert slugs", () => {
     const slugs = EXPERTS.map((expert) => expert.slug);
 
-    expect(slugs).toEqual(["freud", "lacan", "bion", "klein", "winnicott", "kohut", "yalom"]);
+    expect(slugs).toEqual(["freud", "klein", "winnicott", "bion", "lacan", "kohut", "yalom"]);
     expect(new Set(slugs).size).toBe(7);
   });
 

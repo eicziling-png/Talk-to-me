@@ -5,15 +5,11 @@ export default function Home() {
   return (
     <main className="home-shell">
       <section aria-labelledby="home-title" className="home-panel">
-        <p className="eyebrow">历史心理学家对话</p>
-        <h1 id="home-title">与历史心理学家对话</h1>
-        <p className="lead">
-          选择一位你想认识的心理学家，像聊天一样进入他的思想方式。这里适合学习、
-          反思和轻量探索，不需要先阅读复杂理论。
-        </p>
+        <h1 id="home-title">Talk to me</h1>
+        <p className="lead">对话过去的声音，靠近此刻的自己</p>
       </section>
 
-      <section aria-label="专家卡片" className="expert-grid home-expert-grid">
+      <section aria-label="专家卡片" className="expert-grid home-expert-list">
         {EXPERTS.map((expert) => (
           <ExpertCard expert={expert} key={expert.slug} />
         ))}

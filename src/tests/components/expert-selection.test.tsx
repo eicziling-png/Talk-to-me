@@ -12,7 +12,10 @@ describe("home expert browsing", () => {
     const cards = screen.getAllByRole("article");
 
     expect(cards).toHaveLength(7);
-    expect(screen.getByRole("heading", { name: "与历史心理学家对话" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Talk to me" })).toBeInTheDocument();
+    expect(screen.getByText("对话过去的声音，靠近此刻的自己")).toBeInTheDocument();
+    expect(screen.queryByText("历史心理学家对话")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "与历史心理学家对话" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "选择专家" })).not.toBeInTheDocument();
 
     for (const expert of EXPERTS) {
@@ -27,6 +30,29 @@ describe("home expert browsing", () => {
       }
       expect(link).toHaveAttribute("href", `/chat/${expert.slug}`);
     }
+  });
+
+  it("orders experts by real birth year from earliest to latest", () => {
+    render(<Home />);
+
+    expect(screen.getAllByRole("article").map((card) => card.getAttribute("aria-label"))).toEqual([
+      "Sigmund Freud",
+      "Melanie Klein",
+      "Donald Winnicott",
+      "Wilfred Bion",
+      "Jacques Lacan",
+      "Heinz Kohut",
+      "Irvin D. Yalom"
+    ]);
+  });
+
+  it("uses a single-column profile-card list and hides school labels from cards", () => {
+    render(<Home />);
+
+    expect(screen.getByLabelText("专家卡片")).toHaveClass("home-expert-list");
+    expect(screen.queryByText("经典精神分析")).not.toBeInTheDocument();
+    expect(screen.queryByText("拉康派精神分析")).not.toBeInTheDocument();
+    expect(screen.queryByText("英国客体关系")).not.toBeInTheDocument();
   });
 
   it("shows one small safety statement on the home page", () => {
