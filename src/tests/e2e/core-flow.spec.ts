@@ -14,25 +14,22 @@ test("user can select an expert, start chatting, retry, clear, export, and use k
 }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "与历史心理学家对话" })).toBeVisible();
-  await expect(page.getByText(/本工具仅用于心理学教育和角色模拟/)).toBeVisible();
+  await expect(page.getByText(/不提供诊断、治疗或临床服务/)).toBeVisible();
 
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "首页" })).toBeFocused();
 
-  await page.getByRole("link", { name: "探索七位专家人格" }).click();
-  await expect(page.getByRole("heading", { name: "选择一位想聊天的专家" })).toBeVisible();
+  await expect(page.getByRole("article", { name: /Donald Winnicott/i })).toBeVisible();
   await page
     .getByRole("article", { name: /Donald Winnicott/i })
-    .getByRole("link", { name: "了解这位专家" })
+    .getByRole("link", { name: "开始对话" })
     .click();
-  await expect(page.getByRole("heading", { name: "风格" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "开始对话" })).toHaveAttribute(
-    "href",
-    "/chat/winnicott"
-  );
-
-  await page.getByRole("link", { name: "开始对话" }).click();
+  await expect(page).toHaveURL(/\/chat\/winnicott$/);
   await expect(page.getByRole("heading", { name: /Donald Winnicott/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "返回首页" })).toHaveAttribute(
+    "href",
+    "/"
+  );
   await expect(page.getByText(/当前页面/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /导出/i })).toBeDisabled();
 

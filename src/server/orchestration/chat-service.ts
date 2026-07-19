@@ -31,7 +31,7 @@ export async function* runChat(
   const expert = getExpert(parsedRequest.expertSlug);
 
   if (!expert) {
-    yield "我暂时无法找到所选专家。请返回专家列表后重新选择。";
+    yield "我暂时无法找到所选专家。请返回首页后重新选择。";
     return;
   }
 

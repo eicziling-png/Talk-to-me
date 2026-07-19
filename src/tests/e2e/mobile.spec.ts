@@ -9,7 +9,6 @@ test("mobile layout keeps primary navigation, expert cards, and safety copy usab
   await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible();
   await expect(page.getByRole("link", { name: "安全与隐私说明" }).first()).toBeVisible();
 
-  await page.getByRole("link", { name: "探索七位专家人格" }).click();
   await expect(page.getByRole("article", { name: /Donald Winnicott/i })).toBeVisible();
 
   await page.goto("/about");

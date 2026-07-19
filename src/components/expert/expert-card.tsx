@@ -23,8 +23,18 @@ export function ExpertCard({ expert }: ExpertCardProps) {
         <h2>{expert.nameEn}</h2>
         <p className="expert-name-zh">{expert.nameZh}</p>
         <p className="expert-era">{expert.era}</p>
-        <Link className="button-link" href={`/experts/${expert.slug}`}>
-          了解这位专家
+
+        <section aria-labelledby={`${expert.slug}-style-title`} className="card-style">
+          <h3 id={`${expert.slug}-style-title`}>风格</h3>
+          <ul className="detail-list">
+            {expert.style.map((style) => (
+              <li key={style}>{style}</li>
+            ))}
+          </ul>
+        </section>
+
+        <Link className="button-link" href={`/chat/${expert.slug}`}>
+          开始对话
         </Link>
       </div>
     </article>

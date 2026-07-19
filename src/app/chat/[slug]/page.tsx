@@ -19,8 +19,8 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
     return (
       <main className="page-shell">
         <h1>没有找到这位专家</h1>
-        <Link className="button-link" href="/experts">
-          返回专家列表
+        <Link className="button-link" href="/">
+          返回首页
         </Link>
       </main>
     );
@@ -30,8 +30,8 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
     return (
       <main className="page-shell">
         <h1>请选择有效的对话方式</h1>
-        <Link className="button-link" href={`/experts/${expert.slug}`}>
-          返回 {expert.nameEn}
+        <Link className="button-link" href={`/chat/${expert.slug}`}>
+          返回聊天
         </Link>
       </main>
     );
@@ -41,9 +41,14 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
 
   return (
     <main className="page-shell">
-      <Link className="back-link" href="/about">
-        安全与隐私说明
-      </Link>
+      <div className="link-row chat-page-links">
+        <Link className="back-link" href="/">
+          返回首页
+        </Link>
+        <Link className="back-link" href="/about">
+          安全与隐私说明
+        </Link>
+      </div>
       <ChatWorkspace
         expert={{ slug: expert.slug, nameEn: expert.nameEn, nameZh: expert.nameZh }}
         mode={conversationMode}

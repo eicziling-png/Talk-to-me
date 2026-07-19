@@ -1,36 +1,27 @@
-import Link from "next/link";
-
-import { EducationalNotice } from "@/components/safety/educational-notice";
-
-const expertNames = [
-  "Sigmund Freud",
-  "Jacques Lacan",
-  "Wilfred Bion",
-  "Melanie Klein",
-  "Donald Winnicott",
-  "Heinz Kohut",
-  "Irvin Yalom"
-];
+import { ExpertCard } from "@/components/expert/expert-card";
+import { EXPERTS } from "@/domain/experts/registry";
 
 export default function Home() {
   return (
     <main className="home-shell">
       <section aria-labelledby="home-title" className="home-panel">
-        <p className="eyebrow">Historical psychology dialogue lab</p>
+        <p className="eyebrow">历史心理学家对话</p>
         <h1 id="home-title">与历史心理学家对话</h1>
         <p className="lead">
-          本工具仅用于心理学教育和角色模拟，帮助你以安全、清晰的方式理解不同心理学流派的语言、概念和思考路径。
+          选择一位你想认识的心理学家，像聊天一样进入他的思想方式。这里适合学习、
+          反思和轻量探索，不需要先阅读复杂理论。
         </p>
-        <EducationalNotice compact />
-        <ul aria-label="内置专家" className="expert-list">
-          {expertNames.map((name) => (
-            <li key={name}>{name}</li>
-          ))}
-        </ul>
-        <Link className="button-link home-cta" href="/experts">
-          探索七位专家人格
-        </Link>
       </section>
+
+      <section aria-label="专家卡片" className="expert-grid home-expert-grid">
+        {EXPERTS.map((expert) => (
+          <ExpertCard expert={expert} key={expert.slug} />
+        ))}
+      </section>
+
+      <p className="home-safety-note">
+        本工具为基于历史人物思想风格的教育性角色模拟，不提供诊断、治疗或临床服务。
+      </p>
     </main>
   );
 }

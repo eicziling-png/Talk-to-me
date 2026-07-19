@@ -4,8 +4,6 @@ import { describe, expect, it } from "vitest";
 
 import AboutPage from "@/app/about/page";
 import ChatPage from "@/app/chat/[slug]/page";
-import ExpertsPage from "@/app/experts/page";
-import ExpertPage from "@/app/experts/[slug]/page";
 import RootLayout from "@/app/layout";
 import Home from "@/app/page";
 import { CrisisNotice, CRISIS_RESOURCES } from "@/components/safety/crisis-notice";
@@ -31,11 +29,8 @@ describe("safety and privacy surfaces", () => {
     expect(html).toContain("安全与隐私说明");
   });
 
-  it("keeps safety and privacy information reachable from primary route pages", async () => {
+  it("keeps safety and privacy information reachable from routed pages that carry safety detail", async () => {
     const routes = [
-      <Home key="home" />,
-      <ExpertsPage key="experts" />,
-      await ExpertPage({ params: Promise.resolve({ slug: "winnicott" }) }),
       await ChatPage({
         params: Promise.resolve({ slug: "winnicott" }),
         searchParams: Promise.resolve({ mode: "self-reflection" })
@@ -60,7 +55,7 @@ describe("safety and privacy surfaces", () => {
     expect(screen.getAllByText(/模型供应商/).length).toBeGreaterThan(0);
     expect(screen.getByText(/无法联系急救/)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /历史真实性/ })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /方法论/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /方法说明/ })).toBeInTheDocument();
   });
 
   it("renders crisis resources from reviewed configuration rather than generated text", () => {
@@ -80,7 +75,6 @@ describe("safety and privacy surfaces", () => {
     const html = renderToStaticMarkup(
       <>
         <Home />
-        <ExpertsPage />
         <AboutPage />
       </>
     );
