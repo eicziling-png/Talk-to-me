@@ -10,6 +10,8 @@
   --color-border: #cfc3a4;
   --color-border-soft: #ded3b7;
   --color-night: #102447;
+  --color-cool-blue: #1e63b7;
+  --color-warm-light: #f4d27d;
   --color-ink-soft: #314261;
   --chat-bg: #eee6d5;
   --chat-expert-bubble: #fbf6ea;
@@ -102,6 +104,7 @@ select {
 }
 
 .thought-room {
+  position: relative;
   isolation: isolate;
 }
 
@@ -114,9 +117,45 @@ select {
   gap: clamp(2rem, 4vw, 3.5rem);
 }
 
+.home-shell.thought-room::before,
+.home-shell.thought-room::after {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.home-shell.thought-room::before {
+  left: max(-8rem, calc((100vw - 100%) / -2));
+  width: clamp(5rem, 13vw, 11rem);
+  background: var(--color-night);
+  opacity: 0.08;
+}
+
+.home-shell.thought-room::after {
+  right: max(-10rem, calc((100vw - 100%) / -2));
+  width: clamp(4rem, 10vw, 9rem);
+  background: var(--color-warm-light);
+  opacity: 0.16;
+}
+
 .home-panel {
+  position: relative;
   width: min(100%, 46rem);
   padding-block: 0.5rem;
+  padding-left: clamp(0rem, 4vw, 3.25rem);
+}
+
+.home-panel::before {
+  position: absolute;
+  top: -5rem;
+  bottom: -2rem;
+  left: clamp(0rem, 1vw, 1rem);
+  width: 8px;
+  background: var(--chat-expert-bubble);
+  content: "";
 }
 
 .home-expert-list {
@@ -283,12 +322,12 @@ h1 {
 .expert-card {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: clamp(1rem, 3vw, 1.8rem);
+  gap: clamp(1.1rem, 3vw, 2rem);
   border: 1px solid var(--color-border);
   border-radius: 14px;
   background: var(--color-surface);
-  padding: clamp(1.4rem, 4vw, 2.2rem);
-  box-shadow: 0 3px 14px rgba(24, 43, 77, 0.04);
+  padding: clamp(1.55rem, 4vw, 2.3rem);
+  box-shadow: 0 4px 18px rgba(24, 43, 77, 0.045);
 }
 
 .expert-card h2 {
@@ -330,9 +369,10 @@ h1 {
   display: grid;
   gap: 0.55rem;
   margin: 1rem 0;
-  padding-left: 1.2rem;
+  padding-left: 0;
   color: var(--color-muted);
   line-height: 1.7;
+  list-style: none;
 }
 
 .card-style {
@@ -363,6 +403,7 @@ h1 {
 }
 
 .chat-workspace {
+  position: relative;
   display: grid;
   grid-template-rows: auto auto minmax(18rem, 1fr) auto auto;
   width: min(100%, 46rem);
@@ -373,6 +414,23 @@ h1 {
   border-radius: 16px;
   background: var(--chat-bg);
   box-shadow: 0 6px 24px rgba(24, 43, 77, 0.08);
+}
+
+.chat-workspace::before {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  background: var(--color-cool-blue);
+  opacity: 0.12;
+  content: "";
+}
+
+.chat-workspace > * {
+  position: relative;
+  z-index: 1;
 }
 
 .chat-header {
@@ -630,6 +688,16 @@ h1 {
   color: var(--color-bg);
 }
 
+.composer-actions button[type="submit"] {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.composer-actions button[type="submit"]:hover:not(:disabled) {
+  border-color: var(--color-night);
+  background: var(--color-night);
+}
+
 .chat-header-actions button,
 .composer-actions button {
   min-height: 2.35rem;
@@ -664,6 +732,16 @@ h1 {
   .expert-card {
     grid-template-columns: 1fr;
     align-items: start;
+  }
+
+  .home-panel {
+    padding-left: 1.25rem;
+  }
+
+  .home-panel::before {
+    top: -3rem;
+    left: 0;
+    width: 5px;
   }
 
   .page-shell {
