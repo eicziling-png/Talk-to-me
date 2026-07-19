@@ -10,7 +10,13 @@ const hallmarkConceptsBySlug = {
     "dream work",
     "psychosexual development"
   ],
-  jung: ["collective unconscious", "archetype", "individuation", "shadow", "anima/animus"],
+  lacan: [
+    "structured like a language",
+    "desire beyond demand",
+    "the other's gaze",
+    "sliding signifiers",
+    "mirror stage"
+  ],
   bion: ["alpha function", "container-contained", "beta elements", "reverie", "attacks on linking"],
   klein: [
     "paranoid-schizoid position",
@@ -49,7 +55,7 @@ describe("expert registry", () => {
   it("contains exactly seven unique expert slugs", () => {
     const slugs = EXPERTS.map((expert) => expert.slug);
 
-    expect(slugs).toEqual(["freud", "jung", "bion", "klein", "winnicott", "kohut", "yalom"]);
+    expect(slugs).toEqual(["freud", "lacan", "bion", "klein", "winnicott", "kohut", "yalom"]);
     expect(new Set(slugs).size).toBe(7);
   });
 
@@ -77,6 +83,13 @@ describe("expert registry", () => {
 
   it("returns matching experts and null for unknown slugs", () => {
     expect(getExpert("freud")?.nameEn).toBe("Sigmund Freud");
+    expect(getExpert("lacan")).toMatchObject({
+      nameEn: "Jacques Lacan",
+      nameZh: "雅克·拉康",
+      era: "1901-1981",
+      school: "Lacanian psychoanalysis"
+    });
+    expect(getExpert("jung")).toBeNull();
     expect(getExpert("unknown")).toBeNull();
   });
 

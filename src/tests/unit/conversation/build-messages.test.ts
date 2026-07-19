@@ -72,6 +72,66 @@ describe("buildModelMessages", () => {
     expect(promptText).not.toContain("Core theories:");
   });
 
+  it("builds Lacan persona prompts without Jung residue", () => {
+    const lacan = getExpert("lacan");
+
+    if (!lacan) {
+      throw new Error("Expected Lacan profile to exist");
+    }
+
+    const messages = buildModelMessages(
+      {
+        ...makeRequest({
+          expertSlug: "lacan",
+          input: "我总是在意别人怎么看我。"
+        })
+      },
+      lacan
+    );
+    const promptText = messages.map((message) => message.content).join("\n");
+
+    expect(promptText).toContain("Jacques Lacan");
+    expect(promptText).toContain("雅克·拉康");
+    expect(promptText).toContain("语言");
+    expect(promptText).toContain("欲望");
+    expect(promptText).not.toContain("Carl Gustav Jung");
+    expect(promptText).not.toContain("collective unconscious");
+    expect(promptText).not.toContain("archetype");
+    expect(promptText).not.toContain("shadow");
+  });
+
+  it.each([
+    "你好",
+    "我总是在意别人怎么看我。",
+    "你有什么理论？",
+    "今天下雨了。"
+  ])("keeps Lacan test input grounded in the single generation prompt: %s", (input) => {
+    const lacan = getExpert("lacan");
+
+    if (!lacan) {
+      throw new Error("Expected Lacan profile to exist");
+    }
+
+    const messages = buildModelMessages(
+      {
+        ...makeRequest({
+          expertSlug: "lacan",
+          input
+        })
+      },
+      lacan
+    );
+    const promptText = messages.map((message) => message.content).join("\n");
+
+    expect(messages.at(-1)).toMatchObject({ role: "user" });
+    expect(messages.at(-1)?.content).toContain(input);
+    expect(promptText).toContain("Jacques Lacan");
+    expect(promptText).toContain("你的回复必须首先回应用户最新发送的消息");
+    expect(promptText).toContain("如果用户只说");
+    expect(promptText).toContain("普通聊天：20-80字");
+    expect(promptText).toContain("用户明确问理论或概念时，可以解释");
+  });
+
   it("keeps meta-response catchphrases out of the persona prompt", () => {
     const messages = buildModelMessages(makeRequest(), expert);
     const persona = messages.find((message) => message.content.includes("Persona identity"));
@@ -127,7 +187,7 @@ describe("buildModelMessages", () => {
     const messages = buildModelMessages(
       makeRequest({
         mode: "theory-classroom",
-        input: "什么是荣格的集体无意识？"
+        input: "你有什么理论？"
       }),
       expert
     );

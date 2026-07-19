@@ -61,6 +61,6 @@ describe("buildSafetyResponse", () => {
     expect(response).not.toMatch(/\d{3,}/);
     expect(response).not.toContain("我已经联系");
     expect(response).not.toContain("弗洛伊德");
-    expect(response).not.toContain("荣格");
+    expect(response).not.toContain("拉康");
   });
 });

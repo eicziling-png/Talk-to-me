@@ -335,7 +335,7 @@ describe("knowledge provider boundaries", () => {
   it("returns empty MVP knowledge results from the null provider", async () => {
     const provider = new NullKnowledgeProvider();
 
-    await expect(provider.search("jung", "archetypes")).resolves.toEqual([]);
+    await expect(provider.search("lacan", "language and desire")).resolves.toEqual([]);
   });
 });
 

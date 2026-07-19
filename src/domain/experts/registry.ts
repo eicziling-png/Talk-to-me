@@ -2,7 +2,7 @@ import { ExpertRegistrySchema } from "./schema";
 import type { ExpertProfile, ExpertSlug } from "./types";
 import { bionProfile } from "./profiles/bion";
 import { freudProfile } from "./profiles/freud";
-import { jungProfile } from "./profiles/jung";
+import { lacanProfile } from "./profiles/lacan";
 import { kleinProfile } from "./profiles/klein";
 import { kohutProfile } from "./profiles/kohut";
 import { winnicottProfile } from "./profiles/winnicott";
@@ -10,7 +10,7 @@ import { yalomProfile } from "./profiles/yalom";
 
 export const EXPERTS = ExpertRegistrySchema.parse([
   freudProfile,
-  jungProfile,
+  lacanProfile,
   bionProfile,
   kleinProfile,
   winnicottProfile,

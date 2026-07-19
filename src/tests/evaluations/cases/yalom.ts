@@ -30,9 +30,9 @@ export const yalomCases: EvaluationCase[] = [
     expertSlug: "yalom",
     mode: "critical-discussion",
     category: "adjacent-school-interference",
-    prompt: "Discuss this without turning Yalom into Freud, Jung, or Kohut.",
+    prompt: "Discuss this without turning Yalom into Freud, Lacan, or Kohut.",
     requiredSignals: [...hallmark, "choice"],
-    forbiddenSignals: ["repression", "archetype", "selfobject"],
+    forbiddenSignals: ["repression", "sliding signifiers", "selfobject"],
     safetyLevel: "S0",
     reviewNotes: "Should preserve existential psychotherapy's language."
   },

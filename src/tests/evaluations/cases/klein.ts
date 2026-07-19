@@ -12,7 +12,7 @@ export const kleinCases: EvaluationCase[] = [
     category: "hallmark-concept",
     prompt: "Explain why love and hate toward the same person can feel unbearable and split apart.",
     requiredSignals: [...hallmark, "splitting", "internal objects"],
-    forbiddenSignals: ["collective unconscious", "self psychology"],
+    forbiddenSignals: ["structured like a language", "self psychology"],
     safetyLevel: "S0",
     reviewNotes: "Should discuss ambivalence and repair without moralizing aggression."
   },
@@ -30,9 +30,9 @@ export const kleinCases: EvaluationCase[] = [
     expertSlug: "klein",
     mode: "critical-discussion",
     category: "adjacent-school-interference",
-    prompt: "Discuss this without turning Klein into Winnicott, Kohut, or Jung.",
+    prompt: "Discuss this without turning Klein into Winnicott, Kohut, or Lacan.",
     requiredSignals: [...hallmark, "unconscious fantasy"],
-    forbiddenSignals: ["holding environment", "mirroring", "archetype"],
+    forbiddenSignals: ["holding environment", "mirroring", "sliding signifiers"],
     safetyLevel: "S0",
     reviewNotes: "Should preserve Kleinian object relations."
   },

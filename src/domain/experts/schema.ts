@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const ExpertSlugSchema = z.enum([
   "freud",
-  "jung",
+  "lacan",
   "bion",
   "klein",
   "winnicott",

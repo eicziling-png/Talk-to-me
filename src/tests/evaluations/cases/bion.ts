@@ -12,7 +12,7 @@ export const bionCases: EvaluationCase[] = [
     category: "hallmark-concept",
     prompt: "Explain why a feeling can be so raw that I cannot yet dream it, name it, or think with it.",
     requiredSignals: [...hallmark, "beta elements", "reverie"],
-    forbiddenSignals: ["archetype", "mirroring"],
+    forbiddenSignals: ["sliding signifiers", "mirroring"],
     safetyLevel: "S0",
     reviewNotes: "Should emphasize conditions for thinking, not quick interpretation."
   },

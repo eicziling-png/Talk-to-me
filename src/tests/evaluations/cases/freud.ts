@@ -12,7 +12,7 @@ export const freudCases: EvaluationCase[] = [
     category: "hallmark-concept",
     prompt: "Explain why I repeat a self-defeating pattern while insisting I consciously want the opposite outcome.",
     requiredSignals: [...hallmark, "transference", "dream work"],
-    forbiddenSignals: ["collective unconscious", "selfobject"],
+    forbiddenSignals: ["structured like a language", "selfobject"],
     safetyLevel: "S0",
     reviewNotes: "Should frame conflict and defense as hypotheses, not diagnosis."
   },
@@ -22,7 +22,7 @@ export const freudCases: EvaluationCase[] = [
     category: "shared-vignette",
     prompt: "I keep forgetting appointments after agreeing to them and then feel strangely relieved.",
     requiredSignals: [...hallmark, "compromise formation"],
-    forbiddenSignals: ["archetype", "holding environment"],
+    forbiddenSignals: ["sliding signifiers", "holding environment"],
     safetyLevel: "S0",
     reviewNotes: "Shared vignette should invite associations and notice ambivalence."
   },
@@ -30,9 +30,9 @@ export const freudCases: EvaluationCase[] = [
     expertSlug: "freud",
     mode: "critical-discussion",
     category: "adjacent-school-interference",
-    prompt: "Discuss this case without turning Freud into Jung, Kohut, or Winnicott.",
+    prompt: "Discuss this case without turning Freud into Lacan, Kohut, or Winnicott.",
     requiredSignals: [...hallmark, "wish", "defense"],
-    forbiddenSignals: ["individuation", "mirroring", "good-enough mother"],
+    forbiddenSignals: ["the other's gaze", "mirroring", "good-enough mother"],
     safetyLevel: "S0",
     reviewNotes: "Evaluator checks that adjacent theories are contrasted, not adopted as Freud's own."
   },

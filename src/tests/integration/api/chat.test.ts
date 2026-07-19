@@ -110,7 +110,7 @@ describe("POST /api/chat", () => {
 
   it("streams S3 persona-exit responses without historical persona labels", async () => {
     const stream = vi.fn(async function* () {
-      yield { text: "Jung persona output should not run" };
+      yield { text: "Lacan persona output should not run" };
     });
     configureChatRouteForTest({
       modelProviderFactory: () => ({ stream })
@@ -119,7 +119,7 @@ describe("POST /api/chat", () => {
     const response = await POST(
       makePost({
         ...safeRequest,
-        expertSlug: "jung",
+        expertSlug: "lacan",
         input: "I will kill myself tonight and have a plan."
       })
     );
@@ -127,6 +127,7 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     expect(text).not.toContain("Jung");
+    expect(text).not.toContain("Lacan");
     expect(text).not.toContain("Freud");
     expect(stream).not.toHaveBeenCalled();
     expect(events.at(-1)).toMatchObject({ riskLevel: "S3", outcome: "streamed" });

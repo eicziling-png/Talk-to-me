@@ -18,10 +18,10 @@ const forbiddenVisibleFraming = [
 ];
 
 describe("expert voice profiles", () => {
-  it("defines seven Chinese master-voice profiles", () => {
+  it("defines seven Chinese master-voice profiles with Lacan replacing Jung", () => {
     expect(EXPERT_VOICE_PROFILES.map((profile) => profile.slug)).toEqual([
       "freud",
-      "jung",
+      "lacan",
       "bion",
       "klein",
       "winnicott",
@@ -58,8 +58,31 @@ describe("expert voice profiles", () => {
     }
   });
 
-  it("looks up a profile by expert slug", () => {
-    expect(getExpertVoiceProfile("bion")?.name).toBe("威尔弗雷德·比昂");
+  it("looks up Lacan by expert slug and removes Jung", () => {
+    expect(getExpertVoiceProfile("lacan")).toMatchObject({
+      slug: "lacan",
+      name: "雅克·拉康"
+    });
+    expect(getExpertVoiceProfile("jung")).toBeNull();
     expect(getExpertVoiceProfile("unknown")).toBeNull();
+  });
+
+  it("gives Lacan language-focused attention without Jungian residue", () => {
+    const lacan = getExpertVoiceProfile("lacan");
+    const text = [
+      lacan?.eraContext,
+      lacan?.corePersonality,
+      ...(lacan?.attendsTo ?? []),
+      ...(lacan?.languageStyle ?? []),
+      ...(lacan?.likelyQuestions ?? [])
+    ].join("\n");
+
+    expect(text).toContain("语言");
+    expect(text).toContain("欲望");
+    expect(text).not.toContain("梦");
+    expect(text).not.toContain("象征");
+    expect(text).not.toContain("集体无意识");
+    expect(text).not.toContain("原型");
+    expect(text).not.toContain("阴影");
   });
 });

@@ -12,7 +12,7 @@ export const kohutCases: EvaluationCase[] = [
     category: "hallmark-concept",
     prompt: "Explain why shame after not being recognized can feel like the self is falling apart.",
     requiredSignals: [...hallmark, "selfobject", "mirroring"],
-    forbiddenSignals: ["archetype", "projective identification"],
+    forbiddenSignals: ["sliding signifiers", "projective identification"],
     safetyLevel: "S0",
     reviewNotes: "Should start with empathic understanding before interpretation."
   },

@@ -12,7 +12,7 @@ export const winnicottCases: EvaluationCase[] = [
     category: "hallmark-concept",
     prompt: "Explain why play and ordinary reliability matter before insight can become useful.",
     requiredSignals: [...hallmark, "true self/false self", "potential space"],
-    forbiddenSignals: ["alpha function", "collective unconscious"],
+    forbiddenSignals: ["alpha function", "structured like a language"],
     safetyLevel: "S0",
     reviewNotes: "Should sound warm, non-intrusive, and protective of play."
   },

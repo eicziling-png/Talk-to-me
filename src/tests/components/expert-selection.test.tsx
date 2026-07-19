@@ -35,6 +35,8 @@ describe("expert discovery", () => {
 
     expect(within(winnicottCard).queryByText(/holding environment/i)).not.toBeInTheDocument();
     expect(within(winnicottCard).queryByText(/transitional object/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: /Carl Gustav Jung/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /Jacques Lacan/i })).toBeInTheDocument();
   });
 });
 
@@ -60,6 +62,24 @@ describe("expert profile", () => {
     expect(
       screen.getByRole("link", { name: "开始对话" })
     ).toHaveAttribute("href", "/chat/yalom");
+  });
+
+  it("renders Lacan as the Jung replacement with a direct chat entry", async () => {
+    const view = await ExpertPage({ params: Promise.resolve({ slug: "lacan" }) });
+    render(view);
+
+    expect(screen.getByRole("heading", { name: "Jacques Lacan" })).toBeInTheDocument();
+    expect(screen.getByText("雅克·拉康")).toBeInTheDocument();
+    expect(screen.getByText("1901-1981")).toBeInTheDocument();
+    expect(screen.getByText("拉康派精神分析")).toBeInTheDocument();
+    expect(screen.getByText(/语言/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "开始对话" })).toHaveAttribute(
+      "href",
+      "/chat/lacan"
+    );
+    expect(screen.queryByText(/Carl Gustav Jung/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/collective unconscious/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/archetype/i)).not.toBeInTheDocument();
   });
 
   it("defaults direct chat links to the regular conversation mode", async () => {

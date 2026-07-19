@@ -4,7 +4,7 @@ import { EducationalNotice } from "@/components/safety/educational-notice";
 
 const expertNames = [
   "Sigmund Freud",
-  "Carl Jung",
+  "Jacques Lacan",
   "Wilfred Bion",
   "Melanie Klein",
   "Donald Winnicott",
