@@ -84,8 +84,9 @@ describe("model provider boundaries", () => {
     const response = (await collectText(provider.stream(messages))).join("");
 
     expect(response).toContain("还没有连接真实对话模型");
-    expect(response).toContain("OPENAI_API_KEY");
-    expect(response).toContain("OPENAI_MODEL");
+    expect(response).toContain("MODEL_API_KEY");
+    expect(response).toContain("MODEL_NAME");
+    expect(response).toContain("MODEL_PROVIDER");
     expect(response).not.toContain("我听到了");
     expect(response).not.toContain("你刚才说的是这句话本身");
     expect(response).not.toContain("我先不多猜");
@@ -134,6 +135,84 @@ describe("model provider boundaries", () => {
     );
     expect(request.model).toBe("test-model");
     expect(JSON.stringify(request.input)).toContain("Current user input");
+    expect(JSON.stringify(request.input)).toContain("你好");
+  });
+
+  it("calls an OpenAI-compatible chat completions provider from generic model configuration", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: "当然，可以聊聊。你今天想从哪儿开始？" } }]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    const provider = createConfiguredModelProvider({
+      MODEL_PROVIDER: "openai-compatible",
+      MODEL_API_KEY: "deepseek-secret",
+      MODEL_NAME: "deepseek-chat",
+      MODEL_BASE_URL: "https://api.deepseek.com/v1"
+    });
+    const expert = getExpert("yalom");
+
+    expect(expert).toBeDefined();
+
+    const messages = buildModelMessages(
+      {
+        expertSlug: "yalom",
+        mode: "self-reflection",
+        input: "陪我聊聊吧",
+        history: [{ role: "user", content: "hi" }]
+      },
+      expert!
+    );
+
+    const response = (await collectText(provider.stream(messages))).join("");
+    const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+
+    expect(response).toBe("当然，可以聊聊。你今天想从哪儿开始？");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.deepseek.com/v1/chat/completions",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          authorization: "Bearer deepseek-secret"
+        })
+      })
+    );
+    expect(request.model).toBe("deepseek-chat");
+    expect(JSON.stringify(request.messages)).toContain("Conversation Engine");
+    expect(JSON.stringify(request.messages)).toContain("陪我聊聊吧");
+  });
+
+  it("uses the OpenAI responses provider from generic OpenAI configuration", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ output_text: "你好，我们可以慢慢聊。" }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    );
+    const provider = createConfiguredModelProvider({
+      MODEL_PROVIDER: "openai",
+      MODEL_API_KEY: "generic-openai-secret",
+      MODEL_NAME: "gpt-4.1-mini"
+    });
+
+    const response = (await collectText(provider.stream([{ role: "user", content: "你好" }]))).join(
+      ""
+    );
+    const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+
+    expect(response).toBe("你好，我们可以慢慢聊。");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/responses",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          authorization: "Bearer generic-openai-secret"
+        })
+      })
+    );
+    expect(request.model).toBe("gpt-4.1-mini");
     expect(JSON.stringify(request.input)).toContain("你好");
   });
 

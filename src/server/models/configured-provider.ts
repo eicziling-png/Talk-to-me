@@ -7,6 +7,10 @@ import {
 } from "./types";
 
 export type ModelProviderEnvironment = {
+  MODEL_PROVIDER?: string;
+  MODEL_API_KEY?: string;
+  MODEL_NAME?: string;
+  MODEL_BASE_URL?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
 } & Record<string, string | undefined>;
@@ -32,14 +36,43 @@ type OpenAIResponse = {
 export function createConfiguredModelProvider(
   env: ModelProviderEnvironment = process.env
 ): ModelProvider {
-  const apiKey = readOptionalEnv(env, "OPENAI_API_KEY");
-  const model = readOptionalEnv(env, "OPENAI_MODEL");
+  const provider = readOptionalEnv(env, "MODEL_PROVIDER");
+  const genericApiKey = readOptionalEnv(env, "MODEL_API_KEY");
+  const genericModel = readOptionalEnv(env, "MODEL_NAME");
+  const genericBaseUrl = readOptionalEnv(env, "MODEL_BASE_URL");
 
-  if (!apiKey || !model) {
+  if (provider) {
+    if (!genericApiKey || !genericModel) {
+      return new MinimalFallbackModelProvider();
+    }
+
+    if (provider === "openai") {
+      return new OpenAIResponsesModelProvider(genericApiKey, genericModel);
+    }
+
+    if (provider === "openai-compatible") {
+      if (!genericBaseUrl) {
+        return new MinimalFallbackModelProvider();
+      }
+
+      return new OpenAICompatibleChatModelProvider(
+        genericApiKey,
+        genericModel,
+        genericBaseUrl
+      );
+    }
+
     return new MinimalFallbackModelProvider();
   }
 
-  return new ConfiguredModelProvider(apiKey, model);
+  const legacyApiKey = readOptionalEnv(env, "OPENAI_API_KEY");
+  const legacyModel = readOptionalEnv(env, "OPENAI_MODEL");
+
+  if (!legacyApiKey || !legacyModel) {
+    return new MinimalFallbackModelProvider();
+  }
+
+  return new OpenAIResponsesModelProvider(legacyApiKey, legacyModel);
 }
 
 class MinimalFallbackModelProvider implements ModelProvider {
@@ -47,13 +80,15 @@ class MinimalFallbackModelProvider implements ModelProvider {
     yield {
       text: [
         "当前还没有连接真实对话模型，所以我不能假装心理学专家继续聊天。",
-        "请先配置 OPENAI_API_KEY 和 OPENAI_MODEL；配置完成后，系统会用完整上下文进行单次模型回复。"
+        "请先配置 MODEL_PROVIDER、MODEL_API_KEY 和 MODEL_NAME；",
+        "如果使用 DeepSeek 等兼容接口，还需要配置 MODEL_BASE_URL。",
+        "旧的 OPENAI_API_KEY 和 OPENAI_MODEL 配置仍然兼容。"
       ].join("")
     };
   }
 }
 
-class ConfiguredModelProvider implements ModelProvider {
+class OpenAIResponsesModelProvider implements ModelProvider {
   readonly #apiKey: string;
   readonly #model: string;
 
@@ -89,6 +124,52 @@ class ConfiguredModelProvider implements ModelProvider {
     const text = extractResponseText(payload);
     if (!text) {
       throw new ModelProviderError("provider_failed", "OpenAI response did not include text.");
+    }
+
+    for (const chunk of chunkText(text)) {
+      yield { text: chunk };
+    }
+  }
+}
+
+class OpenAICompatibleChatModelProvider implements ModelProvider {
+  readonly #apiKey: string;
+  readonly #model: string;
+  readonly #baseUrl: string;
+
+  constructor(apiKey: string, model: string, baseUrl: string) {
+    this.#apiKey = apiKey;
+    this.#model = model;
+    this.#baseUrl = baseUrl.replace(/\/+$/, "");
+  }
+
+  async *stream(messages: ModelMessage[], signal?: AbortSignal): AsyncIterable<ModelChunk> {
+    const response = await fetch(`${this.#baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${this.#apiKey}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        model: this.#model,
+        messages: messages.map((message) => ({
+          role: message.role,
+          content: message.content
+        }))
+      }),
+      signal
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as OpenAIResponse;
+    if (!response.ok) {
+      const providerMessage =
+        typeof payload.error?.message === "string" ? payload.error.message : "Model request failed.";
+      throw new ModelProviderError("provider_failed", providerMessage);
+    }
+
+    const text = extractResponseText(payload);
+    if (!text) {
+      throw new ModelProviderError("provider_failed", "Model response did not include text.");
     }
 
     for (const chunk of chunkText(text)) {

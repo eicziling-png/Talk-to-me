@@ -166,8 +166,9 @@ describe("POST /api/chat", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/event-stream");
     expect(text).toContain("还没有连接真实对话模型");
-    expect(text).toContain("OPENAI_API_KEY");
-    expect(text).toContain("OPENAI_MODEL");
+    expect(text).toContain("MODEL_PROVIDER");
+    expect(text).toContain("MODEL_API_KEY");
+    expect(text).toContain("MODEL_NAME");
     expect(text).not.toContain("我听到了");
     expect(text).not.toContain("听起来");
     expect(text).not.toContain("难过");
