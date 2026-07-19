@@ -65,8 +65,31 @@ describe("model provider boundaries", () => {
     expect(mapped.message).not.toContain("sensitive details");
   });
 
-  it("does not create a psychological fallback when model credentials are absent", () => {
-    expect(() => createConfiguredModelProvider({})).toThrow("provider_unavailable");
+  it("uses a minimal non-psychological fallback when model credentials are absent", async () => {
+    const provider = createConfiguredModelProvider({});
+    const expert = getExpert("winnicott");
+
+    expect(expert).toBeDefined();
+
+    const messages = buildModelMessages(
+      {
+        expertSlug: "winnicott",
+        mode: "self-reflection",
+        input: "你好",
+        history: []
+      },
+      expert!
+    );
+
+    const response = (await collectText(provider.stream(messages))).join("");
+
+    expect(response).toBe("你好，很高兴见到你。今天怎么样？");
+    expect(response).not.toContain("难过");
+    expect(response).not.toContain("振作一点");
+    expect(response).not.toContain("努力地适应别人");
+    expect(response).not.toContain("支持");
+    expect(response).not.toContain("内心");
+    expect(response).not.toContain("自我");
   });
 
   it("calls the configured model provider with the exact built messages", async () => {

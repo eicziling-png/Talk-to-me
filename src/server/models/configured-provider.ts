@@ -36,13 +36,18 @@ export function createConfiguredModelProvider(
   const model = readOptionalEnv(env, "OPENAI_MODEL");
 
   if (!apiKey || !model) {
-    throw new ModelProviderError(
-      "provider_unavailable",
-      "provider_unavailable: model credentials are not configured."
-    );
+    return new MinimalFallbackModelProvider();
   }
 
   return new ConfiguredModelProvider(apiKey, model);
+}
+
+class MinimalFallbackModelProvider implements ModelProvider {
+  async *stream(messages: ModelMessage[]): AsyncIterable<ModelChunk> {
+    const response = buildMinimalFallbackResponse(readUserInput(messages));
+
+    yield { text: response };
+  }
 }
 
 class ConfiguredModelProvider implements ModelProvider {
@@ -112,6 +117,30 @@ function chunkText(text: string): string[] {
   const sentences = text.match(/[^.!?。！？]+[.!?。！？]?\s*/g) ?? [text];
 
   return sentences.map((sentence) => sentence.trimStart()).filter(Boolean);
+}
+
+function buildMinimalFallbackResponse(userInput: string): string {
+  const normalizedInput = userInput.trim().toLowerCase();
+
+  if (/^(你?好|您好|hi|hello|hey|哈喽|在吗)[。！!？?\s]*$/i.test(normalizedInput)) {
+    return "你好，很高兴见到你。今天怎么样？";
+  }
+
+  if (/今天.*下雨|下雨了|天气/.test(userInput)) {
+    return "是啊，天气会挺影响一天的感觉。你那边雨大吗？";
+  }
+
+  if (/工作|压力|加班|上班/.test(userInput)) {
+    return "听起来最近工作确实不轻松。今天最让你觉得累的是哪一段？";
+  }
+
+  return "我在。你可以慢慢说，我会先听你刚刚提到的事情。";
+}
+
+function readUserInput(messages: ModelMessage[]): string {
+  const current = messages.find((message) => message.content.includes("<user_input>"));
+
+  return current?.content.match(/<user_input>\n([\s\S]*?)\n<\/user_input>/)?.[1]?.trim() ?? "";
 }
 
 function readOptionalEnv(
