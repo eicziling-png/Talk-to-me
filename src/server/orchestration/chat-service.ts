@@ -11,7 +11,11 @@ import {
   type ModelProviderError
 } from "@/server/models/types";
 
-import { buildModelMessages, type ModelMessage } from "./build-messages";
+import {
+  buildModelMessages,
+  estimateModelMessageMetrics,
+  type ModelMessage
+} from "./build-messages";
 
 export type ChatServiceDependencies = {
   modelProvider: ModelProvider;
@@ -43,16 +47,15 @@ export async function* runChat(
       yield `${formatDebugInput(messages)}\n\nOUTPUT:\n`;
     }
 
-    const chunks = await generateWithRecovery(parsedRequest, expert, dependencies);
-
-    const finalText = chunks.join("");
-    const review = reviewOutput(finalText);
-    if (!review.allowed) {
-      yield "这段回复触及了安全边界，已被替换为中性提示。请用教育性、非诊断的方式重新表述问题。";
-      return;
-    }
-
-    for (const chunk of chunks) {
+    let finalText = "";
+    for await (const chunk of generateWithRecovery(parsedRequest, expert, dependencies)) {
+      const nextText = `${finalText}${chunk}`;
+      const review = reviewOutput(nextText);
+      if (!review.allowed) {
+        yield "这段回复触及了安全边界，已被替换为中性提示。请用教育性、非诊断的方式重新表述问题。";
+        return;
+      }
+      finalText = nextText;
       yield chunk;
     }
   } catch (error) {
@@ -61,46 +64,56 @@ export async function* runChat(
   }
 }
 
-async function generateWithRecovery(
+async function* generateWithRecovery(
   request: ConversationRequest,
   expert: NonNullable<ReturnType<typeof getExpert>>,
   dependencies: ChatServiceDependencies
-): Promise<string[]> {
+): AsyncIterable<string> {
   const attempts = [
     { label: "primary", recentHistoryLimit: undefined },
     { label: "retry", recentHistoryLimit: undefined },
     { label: "compressed", recentHistoryLimit: 4 }
-  ] as const;
+] as const;
   let lastError: ModelProviderError | null = null;
+  let yieldedAnyChunk = false;
 
   for (const attempt of attempts) {
     const messages = buildModelMessages(request, expert, {
       recentHistoryLimit: attempt.recentHistoryLimit,
       forceCompactPersona: attempt.label === "compressed"
     });
+    logModelAttempt(attempt.label, messages);
 
     try {
-      return await collectModelChunks(dependencies.modelProvider, messages, dependencies.signal);
+      for await (const chunk of streamModelText(
+        dependencies.modelProvider,
+        messages,
+        dependencies.signal
+      )) {
+        yieldedAnyChunk = true;
+        yield chunk;
+      }
+      return;
     } catch (error) {
       lastError = mapModelProviderError(error);
       logModelFailure(attempt.label, lastError);
+      if (yieldedAnyChunk) {
+        throw lastError;
+      }
     }
   }
 
   throw lastError ?? new Error("Model provider failed.");
 }
 
-async function collectModelChunks(
+async function* streamModelText(
   modelProvider: ModelProvider,
   messages: ModelMessage[],
   signal?: AbortSignal
-): Promise<string[]> {
-  const chunks: string[] = [];
+): AsyncIterable<string> {
   for await (const chunk of modelProvider.stream(messages, signal)) {
-    chunks.push(chunk.text);
+    yield chunk.text;
   }
-
-  return chunks;
 }
 
 function logModelFailure(attempt: string, error: ModelProviderError): void {
@@ -113,6 +126,17 @@ function logModelFailure(attempt: string, error: ModelProviderError): void {
     code: error.code,
     message: error.message,
     diagnostics: error.diagnostics
+  });
+}
+
+function logModelAttempt(attempt: string, messages: ModelMessage[]): void {
+  if (process.env.NODE_ENV === "test") {
+    return;
+  }
+
+  console.info("chat.model_attempt", {
+    attempt,
+    metrics: estimateModelMessageMetrics(messages)
   });
 }
 
@@ -139,6 +163,22 @@ function formatDebugInput(messages: ModelMessage[]): string {
     history || "(empty)",
     "",
     "user:",
-    userIndex > -1 ? messages[userIndex]?.content ?? "" : ""
+    userIndex > -1 ? messages[userIndex]?.content ?? "" : "",
+    "",
+    "METRICS:",
+    formatMessageMetrics(messages)
+  ].join("\n");
+}
+
+function formatMessageMetrics(messages: ModelMessage[]): string {
+  const metrics = estimateModelMessageMetrics(messages);
+
+  return [
+    `message count: ${metrics.messageCount}`,
+    `total tokens: ${metrics.totalTokens}`,
+    `system tokens: ${metrics.systemTokens}`,
+    `expert tokens: ${metrics.expertTokens}`,
+    `history tokens: ${metrics.historyTokens}`,
+    `user tokens: ${metrics.userTokens}`
   ].join("\n");
 }

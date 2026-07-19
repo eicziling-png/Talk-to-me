@@ -334,6 +334,34 @@ describe("runChat", () => {
     expect(attempts[2]).toBeLessThan(attempts[0]);
   });
 
+  it("yields the first safe provider chunk before the provider finishes", async () => {
+    let releaseSecondChunk: () => void = () => undefined;
+    const dependencies: ChatServiceDependencies = {
+      modelProvider: {
+        stream: async function* () {
+          yield { text: "First chunk" };
+          await new Promise<void>((resolve) => {
+            releaseSecondChunk = resolve;
+          });
+          yield { text: " second chunk" };
+        }
+      },
+      knowledgeProvider: { search: vi.fn(async () => []) }
+    };
+
+    const iterator = runChat(makeRequest(), dependencies)[Symbol.asyncIterator]();
+    const first = await iterator.next();
+
+    expect(first).toMatchObject({ done: false, value: "First chunk" });
+
+    const secondPromise = iterator.next();
+    releaseSecondChunk();
+    await expect(secondPromise).resolves.toMatchObject({
+      done: false,
+      value: " second chunk"
+    });
+  });
+
   it("prints input and output sections when debug mode is enabled", async () => {
     const dependencies: ChatServiceDependencies = {
       modelProvider: {
@@ -362,6 +390,11 @@ describe("runChat", () => {
     expect(debugText).toContain("history:");
     expect(debugText).toContain("user:");
     expect(debugText).toContain("你好");
+    expect(debugText).toContain("METRICS:");
+    expect(debugText).toContain("system tokens:");
+    expect(debugText).toContain("expert tokens:");
+    expect(debugText).toContain("history tokens:");
+    expect(debugText).toContain("user tokens:");
     expect(debugText).toContain("OUTPUT:");
     expect(debugText).toContain("你好，很高兴见到你。今天怎么样？");
   });

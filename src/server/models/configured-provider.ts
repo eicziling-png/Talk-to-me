@@ -178,6 +178,7 @@ class OpenAICompatibleChatModelProvider implements ModelProvider {
       },
       body: JSON.stringify({
         model: this.#model,
+        stream: true,
         messages: messages.map((message) => ({
           role: message.role,
           content: message.content
@@ -185,6 +186,30 @@ class OpenAICompatibleChatModelProvider implements ModelProvider {
       }),
       signal
     });
+
+    if (response.ok && response.body && isEventStreamResponse(response)) {
+      let yielded = false;
+      for await (const text of parseChatCompletionStream(response.body)) {
+        yielded = true;
+        yield { text };
+      }
+
+      if (!yielded) {
+        throw new ModelProviderError(
+          "provider_failed",
+          "Model response did not include text.",
+          buildProviderDiagnostics({
+            provider: "openai-compatible",
+            endpoint,
+            messages,
+            response,
+            responseBody: "",
+            apiErrorMessage: "Model response did not include text."
+          })
+        );
+      }
+      return;
+    }
 
     const responseBody = await response.text().catch(() => "");
     const payload = parseProviderJson(responseBody);
@@ -225,6 +250,70 @@ class OpenAICompatibleChatModelProvider implements ModelProvider {
       yield { text: chunk };
     }
   }
+}
+
+function isEventStreamResponse(response: Response): boolean {
+  return response.headers.get("content-type")?.includes("text/event-stream") ?? false;
+}
+
+async function* parseChatCompletionStream(
+  body: ReadableStream<Uint8Array>
+): AsyncIterable<string> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split(/\n\n+/);
+    buffer = frames.pop() ?? "";
+
+    for (const frame of frames) {
+      const text = parseChatCompletionFrame(frame);
+      if (text) {
+        yield text;
+      }
+    }
+  }
+
+  buffer += decoder.decode();
+  const text = parseChatCompletionFrame(buffer);
+  if (text) {
+    yield text;
+  }
+}
+
+function parseChatCompletionFrame(frame: string): string {
+  const dataLines = frame
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.replace(/^data:\s*/, ""));
+
+  for (const data of dataLines) {
+    if (data === "[DONE]") {
+      continue;
+    }
+
+    try {
+      const payload = JSON.parse(data) as {
+        choices?: Array<{ delta?: { content?: unknown }; message?: { content?: unknown } }>;
+      };
+      const text = payload.choices?.[0]?.delta?.content ?? payload.choices?.[0]?.message?.content;
+      if (typeof text === "string") {
+        return text;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return "";
 }
 
 function parseProviderJson(responseBody: string): OpenAIResponse {

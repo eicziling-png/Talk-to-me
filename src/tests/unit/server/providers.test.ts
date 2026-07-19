@@ -181,8 +181,36 @@ describe("model provider boundaries", () => {
       })
     );
     expect(request.model).toBe("deepseek-chat");
+    expect(request.stream).toBe(true);
     expect(JSON.stringify(request.messages)).toContain("Conversation Engine");
     expect(JSON.stringify(request.messages)).toContain("陪我聊聊吧");
+  });
+
+  it("streams OpenAI-compatible chat completion deltas as they arrive", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        [
+          'data: {"choices":[{"delta":{"content":"你"}}]}',
+          "",
+          'data: {"choices":[{"delta":{"content":"好"}}]}',
+          "",
+          "data: [DONE]",
+          ""
+        ].join("\n"),
+        { status: 200, headers: { "content-type": "text/event-stream" } }
+      )
+    );
+    const provider = createConfiguredModelProvider({
+      MODEL_PROVIDER: "openai-compatible",
+      MODEL_API_KEY: "deepseek-secret",
+      MODEL_NAME: "deepseek-chat",
+      MODEL_BASE_URL: "https://api.deepseek.com/v1"
+    });
+
+    await expect(collectText(provider.stream([{ role: "user", content: "hi" }]))).resolves.toEqual([
+      "你",
+      "好"
+    ]);
   });
 
   it("includes provider HTTP diagnostics when OpenAI-compatible calls fail", async () => {

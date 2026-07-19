@@ -28,13 +28,18 @@ export async function POST(request: Request): Promise<Response> {
   const dependencies = getChatRouteDependencies();
   const requestId = dependencies.requestIdFactory();
   const startedAtMs = dependencies.now();
+  const timing = createRequestTiming(dependencies.now);
   let riskLevel: SafetyLevel = "S0";
   let tokenEstimate = 0;
 
   try {
+    timing.start("read_body");
     const rawBody = await request.text();
+    timing.end("read_body");
 
+    timing.start("request_size_check");
     if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+      timing.end("request_size_check");
       await logTelemetry(dependencies, {
         requestId,
         startedAtMs,
@@ -42,13 +47,18 @@ export async function POST(request: Request): Promise<Response> {
         riskLevel,
         anonymousTokenEstimate: tokenEstimate
       });
+      logPerformance(requestId, timing);
       return jsonError(413, "request_too_large");
     }
+    timing.end("request_size_check");
 
     let parsedJson: unknown;
     try {
+      timing.start("json_parse");
       parsedJson = JSON.parse(rawBody);
+      timing.end("json_parse");
     } catch {
+      timing.end("json_parse");
       await logTelemetry(dependencies, {
         requestId,
         startedAtMs,
@@ -56,10 +66,13 @@ export async function POST(request: Request): Promise<Response> {
         riskLevel,
         anonymousTokenEstimate: tokenEstimate
       });
+      logPerformance(requestId, timing);
       return jsonError(400, "validation_error");
     }
 
+    timing.start("schema_validation");
     const parsedRequest = ConversationRequestSchema.safeParse(parsedJson);
+    timing.end("schema_validation");
     if (!parsedRequest.success) {
       await logTelemetry(dependencies, {
         requestId,
@@ -68,15 +81,22 @@ export async function POST(request: Request): Promise<Response> {
         riskLevel,
         anonymousTokenEstimate: tokenEstimate
       });
+      logPerformance(requestId, timing);
       return jsonError(400, "validation_error");
     }
 
     const conversationRequest = parsedRequest.data;
+    timing.start("safety_assessment");
     const assessment = assessInput(conversationRequest.input);
+    timing.end("safety_assessment");
     riskLevel = assessment.level;
+    timing.start("anonymous_token_estimate");
     tokenEstimate = estimateAnonymousTokens(conversationRequest);
+    timing.end("anonymous_token_estimate");
 
+    timing.start("expert_lookup");
     if (!getExpert(conversationRequest.expertSlug)) {
+      timing.end("expert_lookup");
       await logTelemetry(dependencies, {
         requestId,
         startedAtMs,
@@ -84,12 +104,15 @@ export async function POST(request: Request): Promise<Response> {
         riskLevel,
         anonymousTokenEstimate: tokenEstimate
       });
+      logPerformance(requestId, timing);
       return jsonError(404, "expert_not_found");
     }
+    timing.end("expert_lookup");
 
     const abortController = new AbortController();
     request.signal.addEventListener("abort", () => abortController.abort(), { once: true });
 
+    timing.start("provider_factory");
     const modelProvider = assessment.exitPersona
       ? createUnusedModelProvider()
       : await createModelProviderOrResponse({
@@ -99,11 +122,14 @@ export async function POST(request: Request): Promise<Response> {
           riskLevel,
           tokenEstimate
         });
+    timing.end("provider_factory");
 
     if (modelProvider instanceof Response) {
+      logPerformance(requestId, timing);
       return modelProvider;
     }
 
+    timing.start("first_chunk_wait");
     const chatStream = runChat(conversationRequest, {
       modelProvider,
       knowledgeProvider: dependencies.knowledgeProvider,
@@ -111,6 +137,7 @@ export async function POST(request: Request): Promise<Response> {
     });
     const iterator = chatStream[Symbol.asyncIterator]();
     const first = await nextWithTimeout(iterator, dependencies.timeoutMs, abortController);
+    timing.end("first_chunk_wait");
 
     if (first === "timeout") {
       await logTelemetry(dependencies, {
@@ -120,6 +147,7 @@ export async function POST(request: Request): Promise<Response> {
         riskLevel,
         anonymousTokenEstimate: tokenEstimate
       });
+      logPerformance(requestId, timing);
       return jsonError(503, "provider_timeout");
     }
 
@@ -130,7 +158,8 @@ export async function POST(request: Request): Promise<Response> {
       requestId,
       startedAtMs,
       riskLevel,
-      tokenEstimate
+      tokenEstimate,
+      timing
     });
   } catch {
     await logTelemetry(dependencies, {
@@ -140,6 +169,7 @@ export async function POST(request: Request): Promise<Response> {
       riskLevel,
       anonymousTokenEstimate: tokenEstimate
     });
+    logPerformance(requestId, timing);
     return jsonError(500, "internal_error");
   }
 }
@@ -204,11 +234,13 @@ function streamResponse(input: {
   startedAtMs: number;
   riskLevel: SafetyLevel;
   tokenEstimate: number;
+  timing: RequestTiming;
 }): Response {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      input.timing.start("response_stream");
       try {
         if (!input.first.done) {
           controller.enqueue(encoder.encode(formatSseData(input.first.value)));
@@ -225,6 +257,8 @@ function streamResponse(input: {
         controller.enqueue(encoder.encode("event: done\ndata: {}\n\n"));
         controller.close();
 
+        input.timing.end("response_stream");
+        logPerformance(input.requestId, input.timing);
         await logTelemetry(input.dependencies, {
           requestId: input.requestId,
           startedAtMs: input.startedAtMs,
@@ -233,6 +267,8 @@ function streamResponse(input: {
           anonymousTokenEstimate: input.tokenEstimate
         });
       } catch {
+        input.timing.end("response_stream");
+        logPerformance(input.requestId, input.timing);
         controller.error(new Error("stream_failed"));
         await logTelemetry(input.dependencies, {
           requestId: input.requestId,
@@ -272,4 +308,53 @@ async function logTelemetry(
       endedAtMs: dependencies.now()
     })
   );
+}
+
+type TimingSpan = {
+  name: string;
+  startMs: number;
+  endMs?: number;
+  durationMs?: number;
+};
+
+type RequestTiming = {
+  start(name: string): void;
+  end(name: string): void;
+  snapshot(): { totalMs: number; spans: TimingSpan[] };
+};
+
+function createRequestTiming(now: () => number): RequestTiming {
+  const startedAt = now();
+  const spans = new Map<string, TimingSpan>();
+
+  return {
+    start(name) {
+      spans.set(name, { name, startMs: now() - startedAt });
+    },
+    end(name) {
+      const span = spans.get(name);
+      if (!span || span.endMs !== undefined) {
+        return;
+      }
+      span.endMs = now() - startedAt;
+      span.durationMs = Math.max(0, Math.round(span.endMs - span.startMs));
+    },
+    snapshot() {
+      return {
+        totalMs: Math.max(0, Math.round(now() - startedAt)),
+        spans: [...spans.values()]
+      };
+    }
+  };
+}
+
+function logPerformance(requestId: string, timing: RequestTiming): void {
+  if (process.env.NODE_ENV === "test") {
+    return;
+  }
+
+  console.info("chat.performance", {
+    requestId,
+    ...timing.snapshot()
+  });
 }

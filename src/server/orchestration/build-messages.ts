@@ -19,6 +19,15 @@ export type BuildModelMessagesOptions = {
   forceCompactPersona?: boolean;
 };
 
+export type ModelMessageMetrics = {
+  messageCount: number;
+  totalTokens: number;
+  systemTokens: number;
+  expertTokens: number;
+  historyTokens: number;
+  userTokens: number;
+};
+
 export function buildModelMessages(
   request: ConversationRequest,
   expert: ExpertProfile,
@@ -114,4 +123,41 @@ function formatHistoryMessage(message: ChatMessage): ModelMessage {
       "</user_message>"
     ].join("\n")
   };
+}
+
+export function estimateModelMessageMetrics(messages: readonly ModelMessage[]): ModelMessageMetrics {
+  const metrics: ModelMessageMetrics = {
+    messageCount: messages.length,
+    totalTokens: 0,
+    systemTokens: 0,
+    expertTokens: 0,
+    historyTokens: 0,
+    userTokens: 0
+  };
+
+  for (const message of messages) {
+    const tokens = estimateTextTokens(message.content);
+    metrics.totalTokens += tokens;
+
+    if (message.content.includes("Persona identity")) {
+      metrics.expertTokens += tokens;
+    } else if (
+      message.content.includes("Conversation history") ||
+      message.content.includes("Prior user message") ||
+      message.content.includes("Compressed conversation memory") ||
+      message.role === "assistant"
+    ) {
+      metrics.historyTokens += tokens;
+    } else if (message.role === "user") {
+      metrics.userTokens += tokens;
+    } else {
+      metrics.systemTokens += tokens;
+    }
+  }
+
+  return metrics;
+}
+
+function estimateTextTokens(text: string): number {
+  return Math.max(1, Math.ceil(text.length / 4));
 }

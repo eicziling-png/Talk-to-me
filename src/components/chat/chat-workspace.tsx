@@ -79,10 +79,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
         throw new Error("Request failed");
       }
 
-      const text = await response.text();
-      const chunks = parseSseText(text);
-
-      for (const chunk of chunks) {
+      for await (const chunk of readSseChunks(response)) {
         if (controller.signal.aborted) {
           throw new DOMException("aborted", "AbortError");
         }
@@ -218,20 +215,65 @@ function makeMessage(role: BrowserMessage["role"], content: string, complete?: b
   };
 }
 
-function parseSseText(text: string): string[] {
-  return text
-    .split(/\n\n+/)
-    .map((frame) => frame.trim())
-    .filter((frame) => frame.startsWith("data:"))
-    .map((frame) => frame.replace(/^data:\s*/, ""))
-    .map((data) => {
-      try {
-        return JSON.parse(data) as string;
-      } catch {
-        return "";
+async function* readSseChunks(response: Response): AsyncIterable<string> {
+  if (!response.body) {
+    return;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split(/\n\n+/);
+    buffer = frames.pop() ?? "";
+
+    for (const frame of frames) {
+      const chunk = parseSseFrame(frame);
+      if (chunk) {
+        yield chunk;
       }
-    })
-    .filter(Boolean);
+    }
+  }
+
+  buffer += decoder.decode();
+  const chunk = parseSseFrame(buffer);
+  if (chunk) {
+    yield chunk;
+  }
+}
+
+function parseSseFrame(frame: string): string {
+  const event = frame
+    .split(/\r?\n/)
+    .find((line) => line.trim().startsWith("event:"))
+    ?.replace(/^event:\s*/, "")
+    .trim();
+
+  if (event === "done") {
+    return "";
+  }
+
+  const data = frame
+    .split(/\r?\n/)
+    .find((line) => line.trim().startsWith("data:"))
+    ?.replace(/^data:\s*/, "");
+
+  if (!data) {
+    return "";
+  }
+
+  try {
+    return JSON.parse(data) as string;
+  } catch {
+    return "";
+  }
 }
 
 function markLastAssistantIncomplete(messages: BrowserMessage[]): BrowserMessage[] {

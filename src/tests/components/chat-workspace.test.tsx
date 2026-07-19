@@ -22,6 +22,30 @@ function sseResponse(chunks: string[], ok = true, status = 200): Response {
   });
 }
 
+function streamingSseResponse(): { response: Response; enqueue: (chunk: string) => void; close: () => void } {
+  const encoder = new TextEncoder();
+  let controllerRef: ReadableStreamDefaultController<Uint8Array> | null = null;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controllerRef = controller;
+    }
+  });
+
+  return {
+    response: new Response(stream, {
+      status: 200,
+      headers: { "content-type": "text/event-stream" }
+    }),
+    enqueue(chunk: string) {
+      controllerRef?.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+    },
+    close() {
+      controllerRef?.enqueue(encoder.encode("event: done\ndata: {}\n\n"));
+      controllerRef?.close();
+    }
+  };
+}
+
 describe("ChatWorkspace", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn(async () => sseResponse(["Hello", " there"])));
@@ -62,6 +86,27 @@ describe("ChatWorkspace", () => {
     expect(container.querySelector(".chat-message.assistant .message-avatar")).toBeInTheDocument();
     expect(container.querySelector(".chat-message.user .message-bubble")).toBeInTheDocument();
     expect(container.querySelector(".chat-message.assistant .message-bubble")).toBeInTheDocument();
+  });
+
+  it("renders the first SSE chunk before the response stream closes", async () => {
+    const stream = streamingSseResponse();
+    vi.stubGlobal("fetch", vi.fn(async () => stream.response));
+    renderWorkspace();
+
+    fireEvent.change(screen.getByLabelText(/输入消息/i), {
+      target: { value: "Please answer progressively" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
+
+    stream.enqueue("First");
+
+    await screen.findByText("First");
+    expect(screen.queryByText("First second")).not.toBeInTheDocument();
+
+    stream.enqueue(" second");
+    stream.close();
+
+    await screen.findByText("First second");
   });
 
   it("preserves unsent input after server failure and retries the failed message", async () => {
