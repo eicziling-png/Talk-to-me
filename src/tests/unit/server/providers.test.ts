@@ -65,7 +65,7 @@ describe("model provider boundaries", () => {
     expect(mapped.message).not.toContain("sensitive details");
   });
 
-  it("uses a minimal non-psychological fallback when model credentials are absent", async () => {
+  it("does not pretend to be an expert chat model when credentials are absent", async () => {
     const provider = createConfiguredModelProvider({});
     const expert = getExpert("winnicott");
 
@@ -83,117 +83,13 @@ describe("model provider boundaries", () => {
 
     const response = (await collectText(provider.stream(messages))).join("");
 
-    expect(response).toBe("你好，很高兴见到你。今天怎么样？");
-    expect(response).not.toContain("难过");
-    expect(response).not.toContain("振作一点");
-    expect(response).not.toContain("努力地适应别人");
-    expect(response).not.toContain("支持");
-    expect(response).not.toContain("内心");
-    expect(response).not.toContain("自我");
-  });
-
-  it("responds to a vague second turn without inventing an event", async () => {
-    const provider = createConfiguredModelProvider({});
-    const expert = getExpert("bion");
-
-    expect(expert).toBeDefined();
-
-    const messages = buildModelMessages(
-      {
-        expertSlug: "bion",
-        mode: "self-reflection",
-        input: "一般",
-        history: [
-          { role: "user", content: "你好" },
-          { role: "assistant", content: "你好，很高兴见到你。今天怎么样？" }
-        ]
-      },
-      expert!
-    );
-
-    const response = (await collectText(provider.stream(messages))).join("");
-
-    expect(response).toContain("一般");
+    expect(response).toContain("还没有连接真实对话模型");
+    expect(response).toContain("OPENAI_API_KEY");
+    expect(response).toContain("OPENAI_MODEL");
+    expect(response).not.toContain("我听到了");
+    expect(response).not.toContain("你刚才说的是这句话本身");
+    expect(response).not.toContain("我先不多猜");
     expect(response).not.toContain("刚刚提到的事情");
-    expect(response).not.toContain("你可以慢慢说");
-    expect(response).not.toContain("痛苦");
-    expect(response).not.toContain("内心");
-  });
-
-  it("acknowledges a user challenge about the previous unsupported reply", async () => {
-    const provider = createConfiguredModelProvider({});
-    const expert = getExpert("bion");
-
-    expect(expert).toBeDefined();
-
-    const messages = buildModelMessages(
-      {
-        expertSlug: "bion",
-        mode: "self-reflection",
-        input: "我说啥了你就听到了？",
-        history: [
-          { role: "user", content: "你好" },
-          { role: "assistant", content: "你好，很高兴见到你。今天怎么样？" },
-          { role: "user", content: "一般" },
-          { role: "assistant", content: "我在。你可以慢慢说，我会先听你刚刚提到的事情。" }
-        ]
-      },
-      expert!
-    );
-
-    const response = (await collectText(provider.stream(messages))).join("");
-
-    expect(response).toContain("你说得对");
-    expect(response).toContain("一般");
-    expect(response).not.toBe("我在。你可以慢慢说，我会先听你刚刚提到的事情。");
-    expect(response).not.toContain("刚刚提到的事情");
-  });
-
-  it("keeps weather fallback as ordinary conversation", async () => {
-    const provider = createConfiguredModelProvider({});
-    const expert = getExpert("bion");
-
-    expect(expert).toBeDefined();
-
-    const messages = buildModelMessages(
-      {
-        expertSlug: "bion",
-        mode: "self-reflection",
-        input: "今天下雨了",
-        history: []
-      },
-      expert!
-    );
-
-    const response = (await collectText(provider.stream(messages))).join("");
-
-    expect(response).toContain("雨");
-    expect(response).not.toContain("象征");
-    expect(response).not.toContain("内心");
-  });
-
-  it("starts with grounded support for work pressure", async () => {
-    const provider = createConfiguredModelProvider({});
-    const expert = getExpert("bion");
-
-    expect(expert).toBeDefined();
-
-    const messages = buildModelMessages(
-      {
-        expertSlug: "bion",
-        mode: "self-reflection",
-        input: "最近压力很大",
-        history: []
-      },
-      expert!
-    );
-
-    const response = (await collectText(provider.stream(messages))).join("");
-
-    expect(response).toContain("压力");
-    expect(response).toContain("最近");
-    expect(response).not.toContain("童年");
-    expect(response).not.toContain("创伤");
   });
 
   it("calls the configured model provider with the exact built messages", async () => {

@@ -139,7 +139,7 @@ describe("POST /api/chat", () => {
     expect(events.at(-1)).toMatchObject({ riskLevel: "S3", outcome: "streamed" });
   });
 
-  it("streams a minimal non-psychological greeting when model credentials are absent", async () => {
+  it("streams an honest configuration notice when model credentials are absent", async () => {
     resetChatRouteForTest();
     configureChatRouteForTest({
       knowledgeProvider: new NullKnowledgeProvider(),
@@ -165,7 +165,10 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/event-stream");
-    expect(text).toContain("你好，很高兴见到你。今天怎么样？");
+    expect(text).toContain("还没有连接真实对话模型");
+    expect(text).toContain("OPENAI_API_KEY");
+    expect(text).toContain("OPENAI_MODEL");
+    expect(text).not.toContain("我听到了");
     expect(text).not.toContain("听起来");
     expect(text).not.toContain("难过");
     expect(text).not.toContain("振作一点");

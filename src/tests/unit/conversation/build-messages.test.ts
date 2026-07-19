@@ -72,6 +72,17 @@ describe("buildModelMessages", () => {
     expect(promptText).not.toContain("Core theories:");
   });
 
+  it("keeps meta-response catchphrases out of the persona prompt", () => {
+    const messages = buildModelMessages(makeRequest(), expert);
+    const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+    expect(persona?.content).not.toContain("我听到了");
+    expect(persona?.content).not.toContain("你刚才说的是这句话本身");
+    expect(persona?.content).not.toContain("我先不多猜");
+    expect(persona?.content).not.toContain("你可以从这里开始");
+    expect(persona?.content).not.toContain("慢慢说");
+  });
+
   it("instructs the model to reason internally but output only natural short chat", () => {
     const messages = buildModelMessages(
       makeRequest({ input: "我今天真的很难受。" }),
@@ -91,61 +102,39 @@ describe("buildModelMessages", () => {
     expect(promptText).toContain("陪伴 > 理解 > 探索 > 分析");
   });
 
-  it("adds turn-level response style guidance for short ordinary chats", () => {
+  it("adds semantic intent guidance before the current input", () => {
     const messages = buildModelMessages(
-      makeRequest({ mode: "self-reflection", input: "你好" }),
-      expert
-    );
-    const promptText = messages.map((message) => message.content).join("\n");
-
-    expect(promptText).toContain("聊天状态：Casual Conversation 普通聊天");
-    expect(promptText).toContain("不要从专家设定反推用户状态");
-    expect(promptText).toContain("本轮优先普通聊天，回复 20-80 字");
-  });
-
-  it("adds turn-level response style guidance for deeper exploration modes", () => {
-    const messages = buildModelMessages(
-      makeRequest({
-        mode: "critical-discussion",
-        input: "我总觉得自己很失败，也很想知道这种感觉为什么总是反复出现。"
-      }),
-      expert
-    );
-
-    expect(messages.map((message) => message.content).join("\n")).toContain(
-      "本轮可以深入探索，回复 80-200 字"
-    );
-  });
-
-  it("adds life-sharing guidance before the current input", () => {
-    const messages = buildModelMessages(
-      makeRequest({ mode: "self-reflection", input: "今天工作好累。" }),
+      makeRequest({ mode: "self-reflection", input: "还行 陪我聊聊吧" }),
       expert
     );
     const engineIndex = messages.findIndex((message) =>
-      message.content.includes("聊天状态：Life Sharing 日常分享")
+      message.content.includes("Conversation Engine")
     );
     const userInputIndex = messages.findIndex((message) =>
       message.content.includes("Current user input")
     );
+    const promptText = messages.map((message) => message.content).join("\n");
 
     expect(engineIndex).toBeGreaterThan(0);
     expect(engineIndex).toBeLessThan(userInputIndex);
-    expect(messages[engineIndex]?.content).toContain("先回应事情");
+    expect(promptText).toContain("不要用代码关键词匹配来决定回复");
+    expect(promptText).toContain("在内部理解用户想完成什么");
+    expect(promptText).toContain("不要从专家设定反推用户状态");
+    expect(promptText).toContain("回复 20-120 字");
   });
 
-  it("allows explicit theory requests to be answered as theory", () => {
+  it("keeps explicit theory requests in the same single model call", () => {
     const messages = buildModelMessages(
-      makeRequest({ mode: "theory-classroom", input: "什么是荣格的集体无意识？" }),
+      makeRequest({
+        mode: "theory-classroom",
+        input: "什么是荣格的集体无意识？"
+      }),
       expert
     );
+    const promptText = messages.map((message) => message.content).join("\n");
 
-    expect(messages.map((message) => message.content).join("\n")).toContain(
-      "聊天状态：Direct Theory Request 理论问题"
-    );
-    expect(messages.map((message) => message.content).join("\n")).toContain(
-      "可以解释理论"
-    );
+    expect(promptText).toContain("用户明确问理论或概念时，可以解释");
+    expect(promptText).toContain("仍然先回答用户真正问的内容");
   });
 
   it.each([
