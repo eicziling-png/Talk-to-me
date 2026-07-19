@@ -32,9 +32,26 @@ describe("buildModelMessages", () => {
     const personaIndex = messages.findIndex((message) =>
       message.content.includes("Persona identity")
     );
+    const engineIndex = messages.findIndex((message) =>
+      message.content.includes("Conversation Engine")
+    );
 
     expect(personaIndex).toBeGreaterThan(0);
+    expect(engineIndex).toBeGreaterThan(0);
+    expect(engineIndex).toBeLessThan(personaIndex);
     expect(messages[0].content).not.toContain("Persona identity");
+  });
+
+  it("puts strict input grounding constraints before expert persona", () => {
+    const messages = buildModelMessages(makeRequest({ input: "你好" }), expert);
+    const engine = messages.find((message) => message.content.includes("Conversation Engine"));
+
+    expect(engine?.content).toContain("你正在进行真实聊天");
+    expect(engine?.content).toContain("你的第一任务不是分析用户，而是回应用户");
+    expect(engine?.content).toContain("你只能根据用户已经表达的信息回应");
+    expect(engine?.content).toContain("禁止推测用户没有说出的情绪、经历或心理状态");
+    expect(engine?.content).toContain("如果用户只说：你好、hi、在吗，只能进行自然寒暄");
+    expect(engine?.content).toContain("回复前内部检查");
   });
 
   it("uses a Chinese master-voice prompt that hides theory and forbids AI framing", () => {
@@ -181,6 +198,15 @@ describe("buildModelMessages", () => {
 });
 
 describe("ConversationRequestSchema", () => {
+  it("accepts debug mode for explicit chain inspection", () => {
+    expect(() =>
+      ConversationRequestSchema.parse({
+        ...makeRequest(),
+        debug: true
+      })
+    ).not.toThrow();
+  });
+
   it("rejects invalid roles and overlong histories", () => {
     expect(() =>
       ConversationRequestSchema.parse({
@@ -258,5 +284,37 @@ describe("runChat", () => {
 
     expect(chunks.join("")).toBe("A safe educational response.");
     expect(search).not.toHaveBeenCalled();
+  });
+
+  it("prints input and output sections when debug mode is enabled", async () => {
+    const dependencies: ChatServiceDependencies = {
+      modelProvider: {
+        stream: async function* () {
+          yield { text: "你好，很高兴见到你。今天怎么样？" };
+        }
+      },
+      knowledgeProvider: { search: vi.fn(async () => []) }
+    };
+
+    const chunks: string[] = [];
+    for await (const chunk of runChat(
+      makeRequest({
+        input: "你好",
+        debug: true
+      }),
+      dependencies
+    )) {
+      chunks.push(chunk);
+    }
+
+    const debugText = chunks.join("");
+    expect(debugText).toContain("INPUT:");
+    expect(debugText).toContain("system:");
+    expect(debugText).toContain("expert:");
+    expect(debugText).toContain("history:");
+    expect(debugText).toContain("user:");
+    expect(debugText).toContain("你好");
+    expect(debugText).toContain("OUTPUT:");
+    expect(debugText).toContain("你好，很高兴见到你。今天怎么样？");
   });
 });

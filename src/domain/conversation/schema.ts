@@ -32,6 +32,7 @@ export const ConversationRequestSchema = z
     mode: ConversationModeSchema,
     input: z.string().trim().min(1).max(MAX_CURRENT_INPUT_CHARS),
     history: z.array(ChatMessageSchema).max(MAX_HISTORY_MESSAGES).default([]),
-    summary: SessionSummarySchema.optional()
+    summary: SessionSummarySchema.optional(),
+    debug: z.boolean().optional()
   })
   .strict();

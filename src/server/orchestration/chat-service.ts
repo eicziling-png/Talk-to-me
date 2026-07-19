@@ -7,7 +7,7 @@ import { reviewOutput } from "@/domain/safety/review-output";
 import type { KnowledgeProvider } from "@/server/knowledge/types";
 import type { ModelProvider } from "@/server/models/types";
 
-import { buildModelMessages } from "./build-messages";
+import { buildModelMessages, type ModelMessage } from "./build-messages";
 
 export type ChatServiceDependencies = {
   modelProvider: ModelProvider;
@@ -36,6 +36,9 @@ export async function* runChat(
   try {
     const messages = buildModelMessages(parsedRequest, expert);
     const chunks: string[] = [];
+    if (parsedRequest.debug) {
+      yield `${formatDebugInput(messages)}\n\nOUTPUT:\n`;
+    }
 
     for await (const chunk of dependencies.modelProvider.stream(messages, dependencies.signal)) {
       chunks.push(chunk.text);
@@ -54,4 +57,31 @@ export async function* runChat(
   } catch {
     yield "抱歉，当前回复生成失败。请稍后重试，或改用更简短、教育性的提问。";
   }
+}
+
+function formatDebugInput(messages: ModelMessage[]): string {
+  const safety = messages[0]?.content ?? "";
+  const engine = messages.find((message) => message.content.includes("Conversation Engine"));
+  const expert = messages.find((message) => message.content.includes("Persona identity"));
+  const userIndex = messages.findLastIndex((message) => message.content.includes("<user_input>"));
+  const historyMessages = userIndex > -1 ? messages.slice(3, userIndex) : [];
+  const history = historyMessages
+    .map((message) => `${message.role}:\n${message.content}`)
+    .join("\n\n");
+
+  return [
+    "INPUT:",
+    "",
+    "system:",
+    [safety, engine?.content].filter(Boolean).join("\n\n"),
+    "",
+    "expert:",
+    expert?.content ?? "",
+    "",
+    "history:",
+    history || "(empty)",
+    "",
+    "user:",
+    userIndex > -1 ? messages[userIndex]?.content ?? "" : ""
+  ].join("\n");
 }

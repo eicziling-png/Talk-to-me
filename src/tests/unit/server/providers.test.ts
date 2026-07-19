@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getExpert } from "@/domain/experts/registry";
 import type { ConversationRequest } from "@/domain/conversation/types";
@@ -20,6 +20,10 @@ async function collectText(stream: AsyncIterable<{ text: string }>): Promise<str
 }
 
 describe("model provider boundaries", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("streams fake model chunks in configured order", async () => {
     const provider = new FakeModelProvider(["first", " second", " third"]);
     const expert = getExpert("freud");
@@ -61,8 +65,23 @@ describe("model provider boundaries", () => {
     expect(mapped.message).not.toContain("sensitive details");
   });
 
-  it("uses a Chinese embodied fallback when configured model credentials are absent", async () => {
-    const provider = createConfiguredModelProvider({});
+  it("does not create a psychological fallback when model credentials are absent", () => {
+    expect(() => createConfiguredModelProvider({})).toThrow("provider_unavailable");
+  });
+
+  it("calls the configured model provider with the exact built messages", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          output_text: "你好，很高兴见到你。今天怎么样？"
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    const provider = createConfiguredModelProvider({
+      OPENAI_API_KEY: "secret-key",
+      OPENAI_MODEL: "test-model"
+    });
     const expert = getExpert("winnicott");
 
     expect(expert).toBeDefined();
@@ -71,51 +90,43 @@ describe("model provider boundaries", () => {
       {
         expertSlug: "winnicott",
         mode: "self-reflection",
-        input: "我今天很难过",
-        history: []
-      },
-      expert!
-    );
-
-    const chunks = await collectText(provider.stream(messages));
-    const response = chunks.join("");
-
-    expect(response).toContain("听起来");
-    expect(response).toContain("难过");
-    expect(response).not.toContain("AI");
-    expect(response).not.toContain("simulation");
-    expect(response).not.toContain("educational simulation");
-    expect(response).not.toContain("holding environment");
-    expect(response).not.toContain("Winnicott-inspired");
-  });
-
-  it("keeps Bion fallback from exposing technical theory terms", async () => {
-    const provider = createConfiguredModelProvider({});
-    const expert = getExpert("bion");
-
-    expect(expert).toBeDefined();
-
-    const messages = buildModelMessages(
-      {
-        expertSlug: "bion",
-        mode: "self-reflection",
-        input: "我脑子里很乱，说不清楚，只觉得快被压垮了。",
+        input: "你好",
         history: []
       },
       expert!
     );
 
     const response = (await collectText(provider.stream(messages))).join("");
+    const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
 
-    expect(response).toContain("很难被整理成一句话");
-    expect(response).not.toContain("alpha function");
-    expect(response).not.toContain("container");
-    expect(response).not.toContain("beta element");
-    expect(response).not.toContain("模拟");
+    expect(response).toBe("你好，很高兴见到你。今天怎么样？");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/responses",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          authorization: "Bearer secret-key"
+        })
+      })
+    );
+    expect(request.model).toBe("test-model");
+    expect(JSON.stringify(request.input)).toContain("Current user input");
+    expect(JSON.stringify(request.input)).toContain("你好");
   });
 
-  it("keeps fallback replies conversational and free of report formatting", async () => {
-    const provider = createConfiguredModelProvider({});
+  it("keeps configured provider replies conversational and free of report formatting", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          output_text: "这句话听起来很重。你最近是在什么情况下最容易这样看自己？"
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    const provider = createConfiguredModelProvider({
+      OPENAI_API_KEY: "secret-key",
+      OPENAI_MODEL: "explicit-test-model"
+    });
     const expert = getExpert("freud");
 
     expect(expert).toBeDefined();

@@ -5,6 +5,7 @@ import {
   renderConversationEngineGuidance
 } from "@/server/orchestration/conversation-engine";
 import type { ConversationRequest } from "@/domain/conversation/types";
+import { EXPERTS } from "@/domain/experts/registry";
 
 function makeRequest(input: string): ConversationRequest {
   return {
@@ -69,5 +70,41 @@ describe("conversation engine", () => {
 
     expect(guidance).toContain("聊天状态：Direct Theory Request 理论问题");
     expect(guidance).toContain("可以解释理论");
+  });
+
+  it("keeps every expert in casual mode for greetings", () => {
+    for (const expert of EXPERTS) {
+      const guidance = renderConversationEngineGuidance({
+        expertSlug: expert.slug,
+        mode: "self-reflection",
+        input: "你好",
+        history: []
+      });
+
+      expect(guidance).toContain("聊天状态：Casual Conversation 普通聊天");
+      expect(guidance).toContain("只能进行自然寒暄");
+      expect(guidance).not.toContain("情绪表达");
+      expect(guidance).not.toContain("心理探索");
+    }
+  });
+
+  it("keeps rain small talk out of symbolic analysis", () => {
+    expect(classifyConversationInput("今天下雨了。")).toBe("life-sharing");
+
+    const guidance = renderConversationEngineGuidance(makeRequest("今天下雨了。"));
+
+    expect(guidance).toContain("聊天状态：Life Sharing 日常分享");
+    expect(guidance).toContain("先回应事情");
+    expect(guidance).toContain("不要寻找隐藏意义");
+  });
+
+  it("treats work stress as emotional support without jumping into deep analysis", () => {
+    expect(classifyConversationInput("最近工作压力很大。")).toBe("life-sharing");
+
+    const guidance = renderConversationEngineGuidance(makeRequest("最近工作压力很大。"));
+
+    expect(guidance).toContain("先回应事情");
+    expect(guidance).toContain("可以承认压力感");
+    expect(guidance).toContain("不要急着解释成深层原因");
   });
 });

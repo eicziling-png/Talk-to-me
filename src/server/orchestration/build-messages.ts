@@ -33,11 +33,11 @@ export function buildModelMessages(
     },
     {
       role: "system",
-      content: renderPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
+      content: renderConversationEngineGuidance(request)
     },
     {
       role: "system",
-      content: renderConversationEngineGuidance(request)
+      content: renderPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
     }
   ];
 

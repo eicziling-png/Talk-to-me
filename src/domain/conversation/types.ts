@@ -15,4 +15,5 @@ export type ConversationRequest = {
   input: string;
   history: ChatMessage[];
   summary?: SessionSummary;
+  debug?: boolean;
 };

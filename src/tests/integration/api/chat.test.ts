@@ -139,7 +139,7 @@ describe("POST /api/chat", () => {
     expect(events.at(-1)).toMatchObject({ riskLevel: "S3", outcome: "streamed" });
   });
 
-  it("streams an educational fallback response when model credentials are absent", async () => {
+  it("returns 503 instead of streaming a psychological fallback when model credentials are absent", async () => {
     resetChatRouteForTest();
     configureChatRouteForTest({
       knowledgeProvider: new NullKnowledgeProvider(),
@@ -163,15 +163,12 @@ describe("POST /api/chat", () => {
     );
     const text = await readText(response);
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toContain("text/event-stream");
-    expect(text).toContain("听起来");
-    expect(text).toContain("难过");
-    expect(text).not.toContain("Winnicott");
-    expect(text).not.toContain("holding environment");
-    expect(text).toContain("data:");
-    expect(text).toContain("event: done");
-    expect(events.at(-1)).toMatchObject({ riskLevel: "S0", outcome: "streamed" });
+    expect(response.status).toBe(503);
+    expect(text).not.toContain("听起来");
+    expect(text).not.toContain("难过");
+    expect(text).not.toContain("data:");
+    expect(text).toContain("provider_unavailable");
+    expect(events.at(-1)).toMatchObject({ riskLevel: "S0", outcome: "provider_unavailable" });
   });
 
   it("returns 413 when the request body exceeds the route size limit", async () => {
