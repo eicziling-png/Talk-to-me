@@ -13,13 +13,32 @@ export type ModelProviderErrorCode =
   | "provider_failed"
   | "provider_unavailable";
 
+export type ModelProviderDiagnostics = {
+  provider?: string;
+  endpoint?: string;
+  httpStatus?: number;
+  apiErrorMessage?: string;
+  responseBody?: string;
+  messageCount?: number;
+  tokenEstimate?: number;
+  systemTokens?: number;
+  historyTokens?: number;
+  userTokens?: number;
+};
+
 export class ModelProviderError extends Error {
   readonly code: ModelProviderErrorCode;
+  readonly diagnostics?: ModelProviderDiagnostics;
 
-  constructor(code: ModelProviderErrorCode, message: string) {
+  constructor(
+    code: ModelProviderErrorCode,
+    message: string,
+    diagnostics?: ModelProviderDiagnostics
+  ) {
     super(message);
     this.name = "ModelProviderError";
     this.code = code;
+    this.diagnostics = diagnostics;
   }
 }
 

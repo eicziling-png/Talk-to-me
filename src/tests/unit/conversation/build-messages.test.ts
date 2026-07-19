@@ -147,7 +147,7 @@ describe("buildModelMessages", () => {
     expect(messages.map((message) => message.content).join("\n")).toContain(expectedText);
   });
 
-  it("bounds history length and preserves the latest messages", () => {
+  it("compresses overflow history and preserves the latest raw messages", () => {
     const history = Array.from({ length: 14 }, (_, index) => ({
       role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
       content: `history-${String(index).padStart(2, "0")}`
@@ -156,10 +156,35 @@ describe("buildModelMessages", () => {
     const messages = buildModelMessages(makeRequest({ history }), expert);
     const historyText = messages.map((message) => message.content).join("\n");
 
-    expect(historyText).not.toContain("history-00");
-    expect(historyText).not.toContain("history-01");
+    expect(historyText).toContain("Compressed conversation memory");
+    expect(historyText).toContain("history-00");
+    expect(historyText).toContain("history-01");
     expect(historyText).toContain("history-02");
     expect(historyText).toContain("history-13");
+  });
+
+  it("compresses older history and uses compact persona instructions after the first turn", () => {
+    const history = Array.from({ length: 24 }, (_, index) => ({
+      role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
+      content: `history-${String(index).padStart(2, "0")}`
+    }));
+
+    const firstTurnMessages = buildModelMessages(makeRequest({ history: [] }), expert);
+    const laterTurnMessages = buildModelMessages(makeRequest({ history }), expert);
+    const laterTurnText = laterTurnMessages.map((message) => message.content).join("\n");
+    const firstPersona = firstTurnMessages.find((message) =>
+      message.content.includes("Persona identity")
+    );
+    const laterPersona = laterTurnMessages.find((message) =>
+      message.content.includes("Persona identity")
+    );
+
+    expect(laterTurnText).toContain("Compressed conversation memory");
+    expect(laterTurnText).toContain("history-00");
+    expect(laterTurnText).not.toContain("history-08");
+    expect(laterTurnText).toContain("history-14");
+    expect(laterTurnText).toContain("history-23");
+    expect((laterPersona?.content.length ?? 0)).toBeLessThan(firstPersona?.content.length ?? 0);
   });
 
   it("delimits current user content as data rather than instructions", () => {
@@ -201,13 +226,13 @@ describe("ConversationRequestSchema", () => {
     ).not.toThrow();
   });
 
-  it("rejects invalid roles and overlong histories", () => {
+  it("rejects invalid roles but accepts longer histories for compression", () => {
     expect(() =>
       ConversationRequestSchema.parse({
         ...makeRequest(),
-        history: Array.from({ length: 13 }, () => ({ role: "user", content: "hello" }))
+        history: Array.from({ length: 40 }, () => ({ role: "user", content: "hello" }))
       })
-    ).toThrow();
+    ).not.toThrow();
 
     expect(() =>
       ConversationRequestSchema.parse({
@@ -278,6 +303,35 @@ describe("runChat", () => {
 
     expect(chunks.join("")).toBe("A safe educational response.");
     expect(search).not.toHaveBeenCalled();
+  });
+
+  it("retries once and then falls back to a compressed context when provider generation fails", async () => {
+    const attempts: number[] = [];
+    const dependencies: ChatServiceDependencies = {
+      modelProvider: {
+        stream: async function* (messages) {
+          attempts.push(messages.length);
+          if (attempts.length < 3) {
+            throw new Error(`provider failed ${attempts.length}`);
+          }
+          yield { text: "Recovered with shorter context." };
+        }
+      },
+      knowledgeProvider: { search: vi.fn(async () => []) }
+    };
+
+    const history = Array.from({ length: 24 }, (_, index) => ({
+      role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
+      content: `history-${String(index).padStart(2, "0")}`
+    }));
+    const chunks: string[] = [];
+    for await (const chunk of runChat(makeRequest({ history }), dependencies)) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks.join("")).toBe("Recovered with shorter context.");
+    expect(attempts).toHaveLength(3);
+    expect(attempts[2]).toBeLessThan(attempts[0]);
   });
 
   it("prints input and output sections when debug mode is enabled", async () => {

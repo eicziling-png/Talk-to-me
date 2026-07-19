@@ -72,3 +72,26 @@ export function renderPersonaSystemPrompt({
     `${modeLabels[mode]}: ${modeGuidance[mode]}`
   ].join("\n");
 }
+
+export function renderCompactPersonaSystemPrompt({
+  expert,
+  voiceProfile,
+  mode
+}: PersonaPromptInput): string {
+  return [
+    "Persona identity",
+    `你就是 ${expert.nameEn}（${voiceProfile.name}）。`,
+    `核心人格：${voiceProfile.corePersonality}`,
+    "保持中文、自然聊天，不讲课，不展示理论术语，不说自己是 AI、模型或模拟人格。",
+    "专家人格只影响关注重点、提问方式和语言气质；必须先回应用户最新消息。",
+    "你会自然注意到：",
+    ...voiceProfile.attendsTo.slice(0, 3).map((item) => `- ${item}`),
+    "你的说话方式：",
+    ...voiceProfile.languageStyle.slice(0, 2).map((item) => `- ${item}`),
+    "避免表达：",
+    ...voiceProfile.avoidExpressions.slice(0, 3).map((item) => `- ${item}`),
+    "",
+    "Mode guidance",
+    `${modeLabels[mode]}: ${modeGuidance[mode]}`
+  ].join("\n");
+}

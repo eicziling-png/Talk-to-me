@@ -4,7 +4,7 @@ import { createConfiguredModelProvider } from "@/server/models/configured-provid
 import type { ModelProvider } from "@/server/models/types";
 import { consoleTelemetryLogger, type TelemetryLogger } from "@/server/telemetry/logger";
 
-export const DEFAULT_CHAT_ROUTE_TIMEOUT_MS = 30_000;
+export const DEFAULT_CHAT_ROUTE_TIMEOUT_MS = 60_000;
 
 export type ChatRouteDependencies = {
   modelProviderFactory: () => ModelProvider;

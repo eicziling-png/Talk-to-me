@@ -7,7 +7,8 @@ export const CONVERSATION_MODES = [
 ] as const;
 
 export const MAX_CURRENT_INPUT_CHARS = 4_000;
-export const MAX_HISTORY_MESSAGES = 12;
+export const MAX_HISTORY_MESSAGES = 80;
+export const MAX_CONTEXT_HISTORY_MESSAGES = 12;
 export const MAX_HISTORY_MESSAGE_CHARS = 4_000;
 export const MAX_SUMMARY_CHARS = 2_000;
 

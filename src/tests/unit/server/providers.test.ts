@@ -185,6 +185,44 @@ describe("model provider boundaries", () => {
     expect(JSON.stringify(request.messages)).toContain("陪我聊聊吧");
   });
 
+  it("includes provider HTTP diagnostics when OpenAI-compatible calls fail", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: { message: "maximum context length exceeded" }
+        }),
+        { status: 400, headers: { "content-type": "application/json" } }
+      )
+    );
+    const provider = createConfiguredModelProvider({
+      MODEL_PROVIDER: "openai-compatible",
+      MODEL_API_KEY: "deepseek-secret",
+      MODEL_NAME: "deepseek-chat",
+      MODEL_BASE_URL: "https://api.deepseek.com/v1"
+    });
+
+    await expect(
+      collectText(
+        provider.stream([
+          { role: "system", content: "system prompt" },
+          { role: "user", content: "hello" }
+        ])
+      )
+    ).rejects.toMatchObject({
+      code: "provider_failed",
+      diagnostics: expect.objectContaining({
+        httpStatus: 400,
+        apiErrorMessage: "maximum context length exceeded",
+        responseBody: expect.stringContaining("maximum context length exceeded"),
+        messageCount: 2,
+        tokenEstimate: expect.any(Number),
+        systemTokens: expect.any(Number),
+        historyTokens: expect.any(Number),
+        userTokens: expect.any(Number)
+      })
+    });
+  });
+
   it("uses the OpenAI responses provider from generic OpenAI configuration", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ output_text: "你好，我们可以慢慢聊。" }), {

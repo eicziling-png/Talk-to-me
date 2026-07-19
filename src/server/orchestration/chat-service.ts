@@ -5,7 +5,11 @@ import { assessInput } from "@/domain/safety/classify-input";
 import { buildSafetyResponse } from "@/domain/safety/crisis-response";
 import { reviewOutput } from "@/domain/safety/review-output";
 import type { KnowledgeProvider } from "@/server/knowledge/types";
-import type { ModelProvider } from "@/server/models/types";
+import {
+  mapModelProviderError,
+  type ModelProvider,
+  type ModelProviderError
+} from "@/server/models/types";
 
 import { buildModelMessages, type ModelMessage } from "./build-messages";
 
@@ -35,14 +39,11 @@ export async function* runChat(
 
   try {
     const messages = buildModelMessages(parsedRequest, expert);
-    const chunks: string[] = [];
     if (parsedRequest.debug) {
       yield `${formatDebugInput(messages)}\n\nOUTPUT:\n`;
     }
 
-    for await (const chunk of dependencies.modelProvider.stream(messages, dependencies.signal)) {
-      chunks.push(chunk.text);
-    }
+    const chunks = await generateWithRecovery(parsedRequest, expert, dependencies);
 
     const finalText = chunks.join("");
     const review = reviewOutput(finalText);
@@ -54,9 +55,65 @@ export async function* runChat(
     for (const chunk of chunks) {
       yield chunk;
     }
-  } catch {
-    yield "抱歉，当前回复生成失败。请稍后重试，或改用更简短、教育性的提问。";
+  } catch (error) {
+    logModelFailure("final", mapModelProviderError(error));
+    yield "抱歉，刚才连接模型时不太稳定。我已经尝试重连和缩短上下文，但这次还是没成功。你可以稍后再试，或者先发一句更短的话。";
   }
+}
+
+async function generateWithRecovery(
+  request: ConversationRequest,
+  expert: NonNullable<ReturnType<typeof getExpert>>,
+  dependencies: ChatServiceDependencies
+): Promise<string[]> {
+  const attempts = [
+    { label: "primary", recentHistoryLimit: undefined },
+    { label: "retry", recentHistoryLimit: undefined },
+    { label: "compressed", recentHistoryLimit: 4 }
+  ] as const;
+  let lastError: ModelProviderError | null = null;
+
+  for (const attempt of attempts) {
+    const messages = buildModelMessages(request, expert, {
+      recentHistoryLimit: attempt.recentHistoryLimit,
+      forceCompactPersona: attempt.label === "compressed"
+    });
+
+    try {
+      return await collectModelChunks(dependencies.modelProvider, messages, dependencies.signal);
+    } catch (error) {
+      lastError = mapModelProviderError(error);
+      logModelFailure(attempt.label, lastError);
+    }
+  }
+
+  throw lastError ?? new Error("Model provider failed.");
+}
+
+async function collectModelChunks(
+  modelProvider: ModelProvider,
+  messages: ModelMessage[],
+  signal?: AbortSignal
+): Promise<string[]> {
+  const chunks: string[] = [];
+  for await (const chunk of modelProvider.stream(messages, signal)) {
+    chunks.push(chunk.text);
+  }
+
+  return chunks;
+}
+
+function logModelFailure(attempt: string, error: ModelProviderError): void {
+  if (process.env.NODE_ENV === "test") {
+    return;
+  }
+
+  console.error("chat.model_failure", {
+    attempt,
+    code: error.code,
+    message: error.message,
+    diagnostics: error.diagnostics
+  });
 }
 
 function formatDebugInput(messages: ModelMessage[]): string {

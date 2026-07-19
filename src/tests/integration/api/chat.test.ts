@@ -89,6 +89,25 @@ describe("POST /api/chat", () => {
     expect(text).toContain('data: " world"');
   });
 
+  it("accepts long browser histories and compresses them instead of returning validation errors", async () => {
+    const response = await POST(
+      makePost({
+        ...safeRequest,
+        input: "Please continue from where we were.",
+        history: Array.from({ length: 24 }, (_, index) => ({
+          role: index % 2 === 0 ? "user" : "assistant",
+          content: `history-${index}`
+        }))
+      })
+    );
+    const text = await readText(response);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/event-stream");
+    expect(text).toContain('data: "Hello"');
+    expect(text).toContain("event: done");
+  });
+
   it("streams S3 persona-exit responses without historical persona labels", async () => {
     const stream = vi.fn(async function* () {
       yield { text: "Jung persona output should not run" };
@@ -211,6 +230,24 @@ describe("POST /api/chat", () => {
       error: { code: "provider_timeout" }
     });
     expect(response.status).toBe(503);
+  });
+
+  it("streams a friendly fallback instead of failing the frontend when provider calls error", async () => {
+    configureChatRouteForTest({
+      modelProviderFactory: () => ({
+        stream: async function* () {
+          throw new Error("upstream 429");
+        }
+      })
+    });
+
+    const response = await POST(makePost(safeRequest));
+    const text = await readText(response);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/event-stream");
+    expect(text).toContain("连接模型时不太稳定");
+    expect(text).toContain("event: done");
   });
 
   it("logs only allowlisted telemetry fields without message content", async () => {

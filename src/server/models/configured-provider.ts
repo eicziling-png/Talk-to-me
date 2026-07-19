@@ -2,6 +2,7 @@ import type { ModelMessage } from "@/server/orchestration/build-messages";
 
 import {
   type ModelChunk,
+  type ModelProviderDiagnostics,
   type ModelProvider,
   ModelProviderError
 } from "./types";
@@ -98,7 +99,8 @@ class OpenAIResponsesModelProvider implements ModelProvider {
   }
 
   async *stream(messages: ModelMessage[], signal?: AbortSignal): AsyncIterable<ModelChunk> {
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const endpoint = "https://api.openai.com/v1/responses";
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         authorization: `Bearer ${this.#apiKey}`,
@@ -114,16 +116,39 @@ class OpenAIResponsesModelProvider implements ModelProvider {
       signal
     });
 
-    const payload = (await response.json().catch(() => ({}))) as OpenAIResponse;
+    const responseBody = await response.text().catch(() => "");
+    const payload = parseProviderJson(responseBody);
     if (!response.ok) {
       const providerMessage =
         typeof payload.error?.message === "string" ? payload.error.message : "OpenAI request failed.";
-      throw new ModelProviderError("provider_failed", providerMessage);
+      throw new ModelProviderError(
+        "provider_failed",
+        providerMessage,
+        buildProviderDiagnostics({
+          provider: "openai",
+          endpoint,
+          messages,
+          response,
+          responseBody,
+          apiErrorMessage: providerMessage
+        })
+      );
     }
 
     const text = extractResponseText(payload);
     if (!text) {
-      throw new ModelProviderError("provider_failed", "OpenAI response did not include text.");
+      throw new ModelProviderError(
+        "provider_failed",
+        "OpenAI response did not include text.",
+        buildProviderDiagnostics({
+          provider: "openai",
+          endpoint,
+          messages,
+          response,
+          responseBody,
+          apiErrorMessage: "OpenAI response did not include text."
+        })
+      );
     }
 
     for (const chunk of chunkText(text)) {
@@ -144,7 +169,8 @@ class OpenAICompatibleChatModelProvider implements ModelProvider {
   }
 
   async *stream(messages: ModelMessage[], signal?: AbortSignal): AsyncIterable<ModelChunk> {
-    const response = await fetch(`${this.#baseUrl}/chat/completions`, {
+    const endpoint = `${this.#baseUrl}/chat/completions`;
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         authorization: `Bearer ${this.#apiKey}`,
@@ -160,22 +186,105 @@ class OpenAICompatibleChatModelProvider implements ModelProvider {
       signal
     });
 
-    const payload = (await response.json().catch(() => ({}))) as OpenAIResponse;
+    const responseBody = await response.text().catch(() => "");
+    const payload = parseProviderJson(responseBody);
     if (!response.ok) {
       const providerMessage =
         typeof payload.error?.message === "string" ? payload.error.message : "Model request failed.";
-      throw new ModelProviderError("provider_failed", providerMessage);
+      throw new ModelProviderError(
+        "provider_failed",
+        providerMessage,
+        buildProviderDiagnostics({
+          provider: "openai-compatible",
+          endpoint,
+          messages,
+          response,
+          responseBody,
+          apiErrorMessage: providerMessage
+        })
+      );
     }
 
     const text = extractResponseText(payload);
     if (!text) {
-      throw new ModelProviderError("provider_failed", "Model response did not include text.");
+      throw new ModelProviderError(
+        "provider_failed",
+        "Model response did not include text.",
+        buildProviderDiagnostics({
+          provider: "openai-compatible",
+          endpoint,
+          messages,
+          response,
+          responseBody,
+          apiErrorMessage: "Model response did not include text."
+        })
+      );
     }
 
     for (const chunk of chunkText(text)) {
       yield { text: chunk };
     }
   }
+}
+
+function parseProviderJson(responseBody: string): OpenAIResponse {
+  try {
+    return JSON.parse(responseBody) as OpenAIResponse;
+  } catch {
+    return {};
+  }
+}
+
+function buildProviderDiagnostics(input: {
+  provider: string;
+  endpoint: string;
+  messages: ModelMessage[];
+  response: Response;
+  responseBody: string;
+  apiErrorMessage: string;
+}): ModelProviderDiagnostics {
+  return {
+    provider: input.provider,
+    endpoint: input.endpoint,
+    httpStatus: input.response.status,
+    apiErrorMessage: input.apiErrorMessage,
+    responseBody: input.responseBody.slice(0, 4_000),
+    ...estimateMessageTokens(input.messages)
+  };
+}
+
+function estimateMessageTokens(messages: ModelMessage[]): Required<
+  Pick<
+    ModelProviderDiagnostics,
+    "messageCount" | "tokenEstimate" | "systemTokens" | "historyTokens" | "userTokens"
+  >
+> {
+  let systemTokens = 0;
+  let historyTokens = 0;
+  let userTokens = 0;
+
+  for (const message of messages) {
+    const tokens = estimateTextTokens(message.content);
+    if (message.content.includes("Conversation history") || message.content.includes("Prior user message")) {
+      historyTokens += tokens;
+    } else if (message.role === "user") {
+      userTokens += tokens;
+    } else {
+      systemTokens += tokens;
+    }
+  }
+
+  return {
+    messageCount: messages.length,
+    tokenEstimate: systemTokens + historyTokens + userTokens,
+    systemTokens,
+    historyTokens,
+    userTokens
+  };
+}
+
+function estimateTextTokens(text: string): number {
+  return Math.max(1, Math.ceil(text.length / 4));
 }
 
 function extractResponseText(payload: OpenAIResponse): string {

@@ -1,19 +1,28 @@
 import type { ExpertProfile } from "@/domain/experts/types";
-import { boundHistory } from "@/domain/conversation/summarize";
+import { compressHistoryContext } from "@/domain/conversation/summarize";
 import type { ChatMessage, ConversationRequest } from "@/domain/conversation/types";
 import { getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
 
 import { renderConversationEngineGuidance } from "./conversation-engine";
-import { renderPersonaSystemPrompt } from "./persona-prompt-template";
+import {
+  renderCompactPersonaSystemPrompt,
+  renderPersonaSystemPrompt
+} from "./persona-prompt-template";
 
 export type ModelMessage = {
   role: "system" | "user" | "assistant";
   content: string;
 };
 
+export type BuildModelMessagesOptions = {
+  recentHistoryLimit?: number;
+  forceCompactPersona?: boolean;
+};
+
 export function buildModelMessages(
   request: ConversationRequest,
-  expert: ExpertProfile
+  expert: ExpertProfile,
+  options: BuildModelMessagesOptions = {}
 ): ModelMessage[] {
   const voiceProfile = getExpertVoiceProfile(expert.slug);
 
@@ -37,7 +46,10 @@ export function buildModelMessages(
     },
     {
       role: "system",
-      content: renderPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
+      content:
+        options.forceCompactPersona || request.history.length > 0
+          ? renderCompactPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
+          : renderPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
     }
   ];
 
@@ -48,7 +60,17 @@ export function buildModelMessages(
     });
   }
 
-  const history = boundHistory(request.history);
+  const { compressedSummary, recentHistory: history } = compressHistoryContext(
+    request.history,
+    options.recentHistoryLimit
+  );
+  if (compressedSummary) {
+    messages.push({
+      role: "system",
+      content: ["Compressed conversation memory", compressedSummary].join("\n")
+    });
+  }
+
   if (history.length > 0) {
     messages.push({
       role: "system",
