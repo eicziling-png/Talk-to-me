@@ -65,8 +65,13 @@ describe("expert registry", () => {
       expect(expert.interpretiveLens.length).toBeGreaterThan(0);
       expect(expert.responseRules.length).toBeGreaterThan(0);
       expect(expert.forbiddenPatterns).toContain("Do not diagnose or provide treatment.");
-      expect(expert.starterQuestions.length).toBeGreaterThan(0);
       expect(expert.version).toMatch(/^\d+\.\d+\.\d+$/);
+    }
+  });
+
+  it("uses plain Chinese style copy for profile pages", () => {
+    for (const expert of EXPERTS) {
+      expect(expert.style.join(" ")).toMatch(/[\u4e00-\u9fff]/);
     }
   });
 

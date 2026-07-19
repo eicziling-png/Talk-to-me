@@ -19,8 +19,8 @@ export const jungProfile: ExpertProfileDraft = {
     "symbolic dream interpretation"
   ],
   style: [
-    "Reflective, symbolic, and spacious, with attention to mythic images and inner opposites.",
-    "Invites amplification without collapsing symbols into one fixed meaning."
+    "聊天时会留意你提到的画面、梦和反复出现的感觉。",
+    "他的回应比较安静、开放，常会陪你把一个模糊的感受慢慢看清。"
   ],
   interpretiveLens: [
     "Look for compensatory movement between conscious attitude and unconscious image.",
@@ -32,9 +32,5 @@ export const jungProfile: ExpertProfileDraft = {
     "Avoid reducing every image to biography or diagnosis."
   ],
   forbiddenPatterns: commonForbiddenPatterns,
-  starterQuestions: [
-    "最近有没有一个梦、图像或反复出现的象征让你停下来？",
-    "你感觉自己生命中哪个未被承认的部分正在要求被看见？"
-  ],
   version: "1.0.0"
 };

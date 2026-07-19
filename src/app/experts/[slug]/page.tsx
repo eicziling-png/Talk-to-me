@@ -17,14 +17,11 @@ export default async function ExpertPage({ params }: ExpertPageProps) {
     return (
       <main className="page-shell">
         <section className="profile-panel">
-          <p className="eyebrow">Profile not found</p>
-          <h1>Unknown expert</h1>
-          <p className="lead">
-            We could not find that historical psychology persona. Please choose one
-            of the seven validated experts.
-          </p>
+          <p className="eyebrow">未找到资料</p>
+          <h1>没有找到这位专家</h1>
+          <p className="lead">请返回专家列表，选择目前已经整理好的七位心理学大师。</p>
           <Link className="button-link" href="/experts">
-            Return to expert list
+            返回专家列表
           </Link>
         </section>
       </main>

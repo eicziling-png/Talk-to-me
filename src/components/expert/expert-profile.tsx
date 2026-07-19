@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import type { ExpertProfile as ExpertProfileType } from "@/domain/experts/types";
 
-import { ModePicker } from "./mode-picker";
+import { ConversationStart } from "./conversation-start";
+import { schoolLabels } from "./school-labels";
 
 type ExpertProfileProps = {
   expert: ExpertProfileType;
@@ -13,7 +14,7 @@ export function ExpertProfile({ expert }: ExpertProfileProps) {
     <main className="page-shell">
       <div className="link-row">
         <Link className="back-link" href="/experts">
-          Return to expert list
+          返回专家列表
         </Link>
         <Link className="back-link" href="/about">
           安全与隐私说明
@@ -29,42 +30,24 @@ export function ExpertProfile({ expert }: ExpertProfileProps) {
               .slice(0, 2)}
           </div>
           <div>
-            <p className="eyebrow">{expert.school}</p>
+            <p className="eyebrow">{schoolLabels[expert.school] ?? expert.school}</p>
             <h1>{expert.nameEn}</h1>
             <p className="expert-name-zh">{expert.nameZh}</p>
             <p className="lead">{expert.era}</p>
           </div>
         </header>
 
-        <section aria-labelledby="theories-title" className="profile-section">
-          <h2 id="theories-title">Hallmark concepts</h2>
-          <ul className="detail-list">
-            {expert.coreTheories.map((theory) => (
-              <li key={theory}>{theory}</li>
-            ))}
-          </ul>
-        </section>
-
         <section aria-labelledby="style-title" className="profile-section">
-          <h2 id="style-title">Voice and style</h2>
+          <h2 id="style-title">风格</h2>
           <ul className="detail-list">
             {expert.style.map((style) => (
               <li key={style}>{style}</li>
             ))}
           </ul>
         </section>
-
-        <section aria-labelledby="starter-title" className="profile-section">
-          <h2 id="starter-title">Starter questions</h2>
-          <ul className="detail-list">
-            {expert.starterQuestions.map((question) => (
-              <li key={question}>{question}</li>
-            ))}
-          </ul>
-        </section>
       </article>
 
-      <ModePicker expertSlug={expert.slug} />
+      <ConversationStart expertSlug={expert.slug} />
     </main>
   );
 }

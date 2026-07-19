@@ -2,13 +2,13 @@ import Link from "next/link";
 
 import type { ExpertProfile } from "@/domain/experts/types";
 
+import { schoolLabels } from "./school-labels";
+
 type ExpertCardProps = {
   expert: ExpertProfile;
 };
 
 export function ExpertCard({ expert }: ExpertCardProps) {
-  const concepts = expert.coreTheories.slice(0, 2);
-
   return (
     <article aria-label={expert.nameEn} className="expert-card">
       <div className="portrait-placeholder" aria-hidden="true">
@@ -19,17 +19,12 @@ export function ExpertCard({ expert }: ExpertCardProps) {
           .slice(0, 2)}
       </div>
       <div className="expert-card-body">
-        <p className="eyebrow">{expert.school}</p>
+        <p className="eyebrow">{schoolLabels[expert.school] ?? expert.school}</p>
         <h2>{expert.nameEn}</h2>
         <p className="expert-name-zh">{expert.nameZh}</p>
         <p className="expert-era">{expert.era}</p>
-        <ul className="concept-list" aria-label={`${expert.nameEn} hallmark concepts`}>
-          {concepts.map((concept) => (
-            <li key={concept}>{concept}</li>
-          ))}
-        </ul>
         <Link className="button-link" href={`/experts/${expert.slug}`}>
-          View {expert.nameEn} profile
+          了解这位专家
         </Link>
       </div>
     </article>

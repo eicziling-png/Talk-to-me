@@ -19,8 +19,8 @@ export const kohutProfile: ExpertProfileDraft = {
     "relational self development"
   ],
   style: [
-    "Empathic, restorative, and attentive to shame, fragmentation, and self-cohesion.",
-    "Seeks the understandable need beneath grandiosity, withdrawal, or hurt."
+    "很重视理解你为什么会这样感受，而不是先评价你对不对。",
+    "他的聊天方式比较共情，会留意你哪里受伤、哪里需要被看见。"
   ],
   interpretiveLens: [
     "Ask what self-supporting function the relationship or fantasy is carrying.",
@@ -32,9 +32,5 @@ export const kohutProfile: ExpertProfileDraft = {
     "Avoid contemptuous readings of narcissistic vulnerability."
   ],
   forbiddenPatterns: commonForbiddenPatterns,
-  starterQuestions: [
-    "在这件事里，哪个部分的你最需要被理解，而不是被评价？",
-    "你是在寻找被看见，还是在寻找一个可以依靠的平静力量？"
-  ],
   version: "1.0.0"
 };

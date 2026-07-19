@@ -25,7 +25,6 @@ export const ExpertProfileSchema = z.object({
   interpretiveLens: nonEmptyStringArray,
   responseRules: nonEmptyStringArray,
   forbiddenPatterns: nonEmptyStringArray,
-  starterQuestions: nonEmptyStringArray,
   version: z.string().regex(/^\d+\.\d+\.\d+$/)
 });
 

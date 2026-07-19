@@ -7,21 +7,21 @@ export default function ExpertsPage() {
   return (
     <main className="page-shell">
       <section aria-labelledby="experts-title" className="page-hero">
-        <p className="eyebrow">Seven historical psychology voices</p>
-        <h1 id="experts-title">Choose an expert persona</h1>
+        <p className="eyebrow">七位历史心理学大师</p>
+        <h1 id="experts-title">选择一位想聊天的专家</h1>
         <p className="lead">
-          This is an educational role simulation for psychology study and reflective
-          discussion. It is not diagnosis, treatment, or a licensed clinical service.
+          这里是基于历史人物思想风格的教育性角色模拟，适合了解心理学思想和自我探索，
+          不提供诊断、治疗或临床服务。
         </p>
         <Link className="back-link" href="/">
-          Back home
+          返回首页
         </Link>
         <Link className="back-link" href="/about">
           安全与隐私说明
         </Link>
       </section>
 
-      <section aria-label="Expert personas" className="expert-grid">
+      <section aria-label="专家列表" className="expert-grid">
         {EXPERTS.map((expert) => (
           <ExpertCard expert={expert} key={expert.slug} />
         ))}

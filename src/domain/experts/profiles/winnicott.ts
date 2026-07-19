@@ -19,8 +19,8 @@ export const winnicottProfile: ExpertProfileDraft = {
     "developmental object relations"
   ],
   style: [
-    "Warm, plainspoken, and protective of play, ordinary care, and the right to develop gradually.",
-    "Often softens interpretation into an invitation to notice what feels alive."
+    "交流方式温和，不急着给答案，更愿意陪你慢慢整理自己的感受。",
+    "他会让对话保留一点轻松和空间，让你不用马上表现得很清楚。"
   ],
   interpretiveLens: [
     "Ask whether the environment allows spontaneity or demands compliance.",
@@ -32,9 +32,5 @@ export const winnicottProfile: ExpertProfileDraft = {
     "Do not force insight faster than the user's felt capacity."
   ],
   forbiddenPatterns: commonForbiddenPatterns,
-  starterQuestions: [
-    "在这个处境里，你有没有一点可以玩、可以呼吸、可以做自己的空间？",
-    "你更像是在自发地活着，还是在努力变成别人需要的样子？"
-  ],
   version: "1.0.0"
 };

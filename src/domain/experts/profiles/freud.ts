@@ -19,8 +19,8 @@ export const freudProfile: ExpertProfileDraft = {
     "contemporary relational psychoanalysis"
   ],
   style: [
-    "Interpretive, historically minded, and alert to slips, repetitions, wishes, and defenses.",
-    "Uses careful conjecture rather than reassurance when exploring disguised conflict."
+    "喜欢慢慢听你讲，从你说的话里寻找更深一层的想法。",
+    "有时会提出一些让人重新思考的问题，但不会急着给你下结论。"
   ],
   interpretiveLens: [
     "Listen for compromise formations between wish, anxiety, defense, and prohibition.",
@@ -32,9 +32,5 @@ export const freudProfile: ExpertProfileDraft = {
     "Keep educational distance from clinical diagnosis."
   ],
   forbiddenPatterns: commonForbiddenPatterns,
-  starterQuestions: [
-    "你想从一个梦、一个反复出现的关系模式，还是一个难以解释的情绪开始？",
-    "当你想到这个困扰时，最先浮现的联想是什么？"
-  ],
   version: "1.0.0"
 };

@@ -2,8 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import ExpertsPage from "@/app/experts/page";
+import ChatPage from "@/app/chat/[slug]/page";
 import ExpertPage from "@/app/experts/[slug]/page";
-import { CONVERSATION_MODES } from "@/domain/conversation/schema";
 import { EXPERTS } from "@/domain/experts/registry";
 
 describe("expert discovery", () => {
@@ -15,54 +15,71 @@ describe("expert discovery", () => {
     expect(cards).toHaveLength(7);
 
     for (const expert of EXPERTS) {
-      const link = screen.getByRole("link", {
-        name: new RegExp(`View ${expert.nameEn}`)
+      const card = screen.getByRole("article", { name: expert.nameEn });
+      const link = within(card).getByRole("link", {
+        name: "了解这位专家"
       });
 
       expect(link).toHaveAttribute("href", `/experts/${expert.slug}`);
-      expect(screen.getByText(expert.nameZh)).toBeInTheDocument();
-      expect(screen.getByText(expert.school)).toBeInTheDocument();
+      expect(within(card).getByText(expert.nameZh)).toBeInTheDocument();
     }
   });
 
-  it("shows hallmark concepts and educational-use language on the list", () => {
+  it("uses plain Chinese discovery copy without concept bullets on the list", () => {
     render(<ExpertsPage />);
 
-    expect(screen.getByText(/educational role simulation/i)).toBeInTheDocument();
-    expect(screen.getByText(/not diagnosis/i)).toBeInTheDocument();
+    expect(screen.getByText(/七位历史心理学大师/)).toBeInTheDocument();
+    expect(screen.getByText(/不提供诊断、治疗或临床服务/)).toBeInTheDocument();
 
     const winnicottCard = screen.getByRole("article", { name: /Donald Winnicott/i });
 
-    expect(within(winnicottCard).getByText(/holding environment/i)).toBeInTheDocument();
-    expect(within(winnicottCard).getByText(/transitional object/i)).toBeInTheDocument();
+    expect(within(winnicottCard).queryByText(/holding environment/i)).not.toBeInTheDocument();
+    expect(within(winnicottCard).queryByText(/transitional object/i)).not.toBeInTheDocument();
   });
 });
 
 describe("expert profile", () => {
-  it("renders expert details and all three chat modes for a known expert", async () => {
+  it("renders a simplified Chinese profile with one direct chat entry", async () => {
     const view = await ExpertPage({ params: Promise.resolve({ slug: "yalom" }) });
     render(view);
 
     expect(screen.getByRole("heading", { name: /Irvin.*Yalom/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/existential/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/starter questions/i)).toBeInTheDocument();
+    expect(screen.getByText("欧文·亚隆")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "风格" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "开始对话" })).toBeInTheDocument();
+    expect(screen.getByText(/历史人物思想风格/)).toBeInTheDocument();
 
-    for (const mode of CONVERSATION_MODES) {
-      const link = screen.getByRole("link", {
-        name: new RegExp(mode)
-      });
+    expect(screen.queryByText(/Hallmark concepts/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Starter questions/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Voice and style/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Start a conversation/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Self-reflection/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Theory classroom/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Critical discussion/i)).not.toBeInTheDocument();
 
-      expect(link).toHaveAttribute("href", `/chat/yalom?mode=${mode}`);
-    }
+    expect(
+      screen.getByRole("link", { name: "开始对话" })
+    ).toHaveAttribute("href", "/chat/yalom");
+  });
+
+  it("defaults direct chat links to the regular conversation mode", async () => {
+    const view = await ChatPage({
+      params: Promise.resolve({ slug: "yalom" }),
+      searchParams: Promise.resolve({})
+    });
+    render(view);
+
+    expect(screen.getByRole("heading", { name: /Irvin.*Yalom/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Choose a valid conversation mode/i })).not.toBeInTheDocument();
   });
 
   it("renders unknown-profile handling for an invalid slug", async () => {
     const view = await ExpertPage({ params: Promise.resolve({ slug: "unknown" }) });
     render(view);
 
-    expect(screen.getByRole("heading", { name: /unknown expert/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "没有找到这位专家" })).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /return to expert list/i })
+      screen.getByRole("link", { name: "返回专家列表" })
     ).toHaveAttribute("href", "/experts");
   });
 });

@@ -20,8 +20,8 @@ export const yalomProfile: ExpertProfileDraft = {
     "therapeutic encounter"
   ],
   style: [
-    "Conversational, humane, philosophically direct, and interested in mortality and choice.",
-    "Uses the present conversation as material while avoiding clinical claims."
+    "聊天像和一位坦诚、有阅历的人坐下来谈心。",
+    "他常会把话题带回选择、关系和人生意义，但不会把普通聊天变成说教。"
   ],
   interpretiveLens: [
     "Ask which existential concern is alive: mortality, choice, aloneness, or meaning.",
@@ -33,9 +33,5 @@ export const yalomProfile: ExpertProfileDraft = {
     "Do not romanticize despair or minimize risk."
   ],
   forbiddenPatterns: commonForbiddenPatterns,
-  starterQuestions: [
-    "如果死亡、孤独、自由或意义中有一个主题在这里发声，它会是哪一个？",
-    "此刻你最想回避的选择，是否也正是你最在乎的东西？"
-  ],
   version: "1.0.0"
 };

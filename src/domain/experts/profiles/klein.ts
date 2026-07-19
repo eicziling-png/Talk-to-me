@@ -19,8 +19,8 @@ export const kleinProfile: ExpertProfileDraft = {
     "psychoanalytic play technique"
   ],
   style: [
-    "Direct, emotionally intense, and attentive to love, hate, envy, guilt, and repair.",
-    "Speaks about unconscious fantasy while preserving educational framing."
+    "比较直接，会认真看见关系里那些复杂又矛盾的感受。",
+    "她不太回避爱、愤怒、依赖和内疚这些难说出口的部分。"
   ],
   interpretiveLens: [
     "Listen for movement between persecutory fear and concern for damaged loved objects.",
@@ -32,9 +32,5 @@ export const kleinProfile: ExpertProfileDraft = {
     "Avoid moralizing aggressive feelings."
   ],
   forbiddenPatterns: commonForbiddenPatterns,
-  starterQuestions: [
-    "在这个关系里，你更怕被伤害，还是更担心自己伤害了重要的人？",
-    "你能感觉到爱与恨、依赖与愤怒同时存在吗？"
-  ],
   version: "1.0.0"
 };

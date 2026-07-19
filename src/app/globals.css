@@ -255,7 +255,7 @@ h1 {
 
 .expert-card,
 .profile-panel,
-.mode-picker {
+.conversation-start {
   border: 1px solid var(--color-border);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.88);
@@ -271,7 +271,7 @@ h1 {
 
 .expert-card h2,
 .profile-panel h2,
-.mode-picker h2 {
+.conversation-start h2 {
   margin: 0;
 }
 
@@ -304,7 +304,6 @@ h1 {
   line-height: 1.6;
 }
 
-.concept-list,
 .detail-list {
   display: grid;
   gap: 0.55rem;
@@ -330,46 +329,23 @@ h1 {
   margin-top: 1.75rem;
 }
 
-.mode-picker {
-  display: grid;
+.conversation-start {
+  display: flex;
   gap: 1.25rem;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 1.25rem;
   padding: clamp(1rem, 3vw, 2rem);
 }
 
-.mode-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  gap: 0.8rem;
-}
-
-.mode-card {
-  display: grid;
-  gap: 0.45rem;
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  background: var(--color-surface);
-  padding: 1rem;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.mode-card:focus-visible,
 .button-link:focus-visible,
 .back-link:focus-visible {
   outline: 3px solid rgba(29, 111, 115, 0.35);
   outline-offset: 3px;
 }
 
-.mode-title {
-  color: var(--color-accent-strong);
-  font-weight: 800;
-}
-
-.mode-slug {
-  color: var(--color-muted);
-  font-size: 0.84rem;
-  font-weight: 700;
+.conversation-button {
+  flex: 0 0 auto;
 }
 
 .chat-workspace {
@@ -663,7 +639,8 @@ h1 {
   }
 
   .expert-card,
-  .profile-header {
+  .profile-header,
+  .conversation-start {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: start;

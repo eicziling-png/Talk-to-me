@@ -18,24 +18,26 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   if (!expert) {
     return (
       <main className="page-shell">
-        <h1>Unknown expert</h1>
+        <h1>没有找到这位专家</h1>
         <Link className="button-link" href="/experts">
-          Return to expert list
+          返回专家列表
         </Link>
       </main>
     );
   }
 
-  if (!isConversationMode(mode)) {
+  if (mode !== undefined && !isConversationMode(mode)) {
     return (
       <main className="page-shell">
-        <h1>Choose a valid conversation mode</h1>
+        <h1>请选择有效的对话方式</h1>
         <Link className="button-link" href={`/experts/${expert.slug}`}>
-          Return to {expert.nameEn}
+          返回 {expert.nameEn}
         </Link>
       </main>
     );
   }
+
+  const conversationMode = mode ?? "self-reflection";
 
   return (
     <main className="page-shell">
@@ -44,7 +46,7 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
       </Link>
       <ChatWorkspace
         expert={{ slug: expert.slug, nameEn: expert.nameEn, nameZh: expert.nameZh }}
-        mode={mode}
+        mode={conversationMode}
       />
     </main>
   );
