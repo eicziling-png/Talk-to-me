@@ -74,6 +74,8 @@ describe("conversation engine", () => {
 
   it("keeps every expert in casual mode for greetings", () => {
     for (const expert of EXPERTS) {
+      expect(classifyConversationInput("你好")).toBe("casual-conversation");
+
       const guidance = renderConversationEngineGuidance({
         expertSlug: expert.slug,
         mode: "self-reflection",
@@ -83,8 +85,8 @@ describe("conversation engine", () => {
 
       expect(guidance).toContain("聊天状态：Casual Conversation 普通聊天");
       expect(guidance).toContain("只能进行自然寒暄");
-      expect(guidance).not.toContain("情绪表达");
-      expect(guidance).not.toContain("心理探索");
+      expect(guidance).not.toContain("聊天状态：Emotional Expression 情绪表达");
+      expect(guidance).not.toContain("聊天状态：Psychological Exploration 心理探索");
     }
   });
 

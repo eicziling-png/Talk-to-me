@@ -51,6 +51,11 @@ describe("buildModelMessages", () => {
     expect(engine?.content).toContain("你只能根据用户已经表达的信息回应");
     expect(engine?.content).toContain("禁止推测用户没有说出的情绪、经历或心理状态");
     expect(engine?.content).toContain("如果用户只说：你好、hi、在吗，只能进行自然寒暄");
+    expect(engine?.content).toContain("你的回复必须首先回应用户最新发送的消息");
+    expect(engine?.content).toContain("最新用户消息的优先级高于专家人格描述");
+    expect(engine?.content).toContain("不要回复与当前消息无关的话");
+    expect(engine?.content).toContain("如果用户只说：“一般”“还好”“嗯”“没事”，不要假设用户想展开深层心理探索");
+    expect(engine?.content).toContain("上下文一致性检查");
     expect(engine?.content).toContain("回复前内部检查");
   });
 
