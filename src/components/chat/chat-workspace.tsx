@@ -169,9 +169,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
           <div>
             <p className="eyebrow">正在聊天</p>
             <h1 id="chat-title">{expert.nameEn}</h1>
-            <p className="expert-name-zh">
-              {expert.nameZh} · {mode}
-            </p>
+            <p className="expert-name-zh">{expert.nameZh}</p>
           </div>
         </div>
         <div className="chat-header-actions">

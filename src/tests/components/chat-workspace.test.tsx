@@ -61,6 +61,15 @@ describe("ChatWorkspace", () => {
     expect(screen.getByRole("button", { name: /发送/i })).toBeDisabled();
   });
 
+  it("does not expose raw internal mode labels in the chat header", () => {
+    renderWorkspace();
+
+    expect(screen.getByText("温尼科特")).toBeInTheDocument();
+    expect(screen.queryByText(/self-reflection/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/theory-classroom/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/critical-discussion/)).not.toBeInTheDocument();
+  });
+
   it("sends a message and streams an expert reply in messenger layout", async () => {
     const { container } = renderWorkspace();
 
