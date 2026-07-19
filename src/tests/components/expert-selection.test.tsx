@@ -50,6 +50,7 @@ describe("home expert browsing", () => {
     render(<Home />);
 
     expect(screen.getByLabelText("专家卡片")).toHaveClass("home-expert-list");
+    expect(screen.getByRole("main")).toHaveClass("thought-room");
     expect(screen.queryByText("经典精神分析")).not.toBeInTheDocument();
     expect(screen.queryByText("拉康派精神分析")).not.toBeInTheDocument();
     expect(screen.queryByText("英国客体关系")).not.toBeInTheDocument();

@@ -35,7 +35,7 @@ export function Transcript({ expert, messages }: TranscriptProps) {
   if (messages.length === 0) {
     return (
       <section aria-label="聊天记录" className="chat-transcript" ref={transcriptRef}>
-        <p className="empty-transcript">像发微信一样，和 {expert.nameEn} 说说你的近况。</p>
+        <p className="empty-transcript">从一句简单的话开始，和 {expert.nameEn} 慢慢说。</p>
       </section>
     );
   }

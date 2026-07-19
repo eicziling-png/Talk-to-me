@@ -160,7 +160,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   }
 
   return (
-    <section className="chat-workspace" aria-labelledby="chat-title">
+    <section className="chat-workspace thought-room" aria-labelledby="chat-title">
       <header className="chat-header">
         <div className="chat-contact">
           <span className="chat-contact-avatar" aria-hidden="true">

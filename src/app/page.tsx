@@ -3,7 +3,7 @@ import { EXPERTS } from "@/domain/experts/registry";
 
 export default function Home() {
   return (
-    <main className="home-shell">
+    <main className="home-shell thought-room">
       <section aria-labelledby="home-title" className="home-panel">
         <h1 id="home-title">Talk to me</h1>
         <p className="lead">对话过去的声音，靠近此刻的自己</p>

@@ -70,6 +70,14 @@ describe("ChatWorkspace", () => {
     expect(screen.queryByText(/critical-discussion/)).not.toBeInTheDocument();
   });
 
+  it("uses a reflective conversation-room shell instead of a messenger clone", () => {
+    const { container } = renderWorkspace();
+
+    expect(container.querySelector(".chat-workspace")).toHaveClass("thought-room");
+    expect(screen.getByText(/从一句简单的话开始/)).toBeInTheDocument();
+    expect(screen.queryByText(/微信/)).not.toBeInTheDocument();
+  });
+
   it("sends a message and streams an expert reply in messenger layout", async () => {
     const { container } = renderWorkspace();
 
