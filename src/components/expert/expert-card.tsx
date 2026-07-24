@@ -8,7 +8,7 @@ type ExpertCardProps = {
 
 export function ExpertCard({ expert }: ExpertCardProps) {
   return (
-    <article aria-label={expert.nameEn} className="expert-card">
+    <article aria-label={expert.nameEn} className="expert-card" data-spine={getSpineTone(expert.slug)}>
       <div className="portrait-placeholder" aria-hidden="true">
         {expert.nameEn
           .split(" ")
@@ -36,4 +36,8 @@ export function ExpertCard({ expert }: ExpertCardProps) {
       </div>
     </article>
   );
+}
+
+function getSpineTone(slug: ExpertProfile["slug"]): "blue" | "brown" {
+  return slug === "winnicott" || slug === "lacan" || slug === "kohut" ? "brown" : "blue";
 }
