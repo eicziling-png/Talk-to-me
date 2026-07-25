@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 
+import { EXPERT_DISPLAY_COPY } from "@/components/expert/display-copy";
 import {
   createBrowserSession,
   type BrowserMessage,
@@ -20,11 +21,13 @@ type ChatWorkspaceProps = {
     slug: ExpertSlug;
     nameEn: string;
     nameZh: string;
+    era: string;
   };
   mode: ConversationMode;
 };
 
 export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
+  const display = EXPERT_DISPLAY_COPY[expert.slug];
   const initialSession = useMemo(
     () =>
       createBrowserSession({
@@ -160,19 +163,33 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   }
 
   return (
-    <section className="chat-workspace thought-room" aria-labelledby="chat-title">
+    <section className="chat-workspace oil-room chat-oil-room" aria-labelledby="chat-title">
+      <div className="oil-space" aria-hidden="true">
+        <span className="oil-plane oil-plane-blue" />
+        <span className="oil-plane oil-plane-window" />
+        <span className="oil-plane oil-plane-floor-blue" />
+        <span className="oil-plane oil-plane-threshold" />
+        <span className="oil-plane oil-plane-light-seam" />
+        <span className="oil-plane oil-plane-warm" />
+        <span className="oil-plane oil-plane-floor-brown" />
+        <span className="oil-plane oil-plane-plant" />
+        <span className="oil-plane oil-plane-lamp" />
+      </div>
+
+      <section className="oil-brand chat-brand" aria-label="Talk to me">
+        <h2>Talk to me</h2>
+        <span className="brand-rule" aria-hidden="true" />
+        <p>对话过去的声音，靠近此刻的自己</p>
+      </section>
+
       <header className="chat-header">
-        <div className="chat-contact">
-          <span className="chat-contact-avatar" aria-hidden="true">
-            🧠
-          </span>
-          <div>
-            <p className="eyebrow">正在聊天</p>
-            <h1 id="chat-title">{expert.nameEn}</h1>
-            <p className="expert-name-zh">{expert.nameZh}</p>
-          </div>
+        <div className="selected-expert-card">
+          <p id="chat-title">
+            {expert.nameZh} · {expert.era}
+          </p>
+          <span>{display.poeticLine}</span>
         </div>
-        <div className="chat-header-actions">
+        <div className="chat-header-actions" aria-label="会话操作">
           <ExportButton session={session} />
           <button onClick={clear} type="button">
             清空
@@ -281,9 +298,7 @@ function markLastAssistantIncomplete(messages: BrowserMessage[]): BrowserMessage
   }
 
   return messages.map((message, index) =>
-    index === lastAssistantIndex
-      ? { ...message, content: message.content || "已暂停。", complete: false }
-      : message
+    index === lastAssistantIndex ? { ...message, content: message.content || "已暂停。", complete: false } : message
   );
 }
 

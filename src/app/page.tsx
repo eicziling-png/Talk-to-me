@@ -1,33 +1,33 @@
-import Image from "next/image";
-
 import { ExpertCard } from "@/components/expert/expert-card";
+import { FIGMA_HOME_ORDER } from "@/components/expert/display-copy";
 import { EXPERTS } from "@/domain/experts/registry";
 
 export default function Home() {
+  const expertsBySlug = new Map(EXPERTS.map((expert) => [expert.slug, expert]));
+  const experts = FIGMA_HOME_ORDER.map((slug) => expertsBySlug.get(slug)).filter(Boolean);
+
   return (
-    <main className="home-shell thought-room">
-      <div className="home-painting-planes" aria-hidden="true">
-        <span className="home-plane home-plane-blue" />
-        <span className="home-plane home-plane-window" />
-        <span className="home-plane home-plane-brown" />
-        <span className="home-plane home-plane-light" />
-        <span className="home-plane home-plane-wall" />
+    <main className="oil-room home-oil-room" aria-labelledby="home-title">
+      <div className="oil-space" aria-hidden="true">
+        <span className="oil-plane oil-plane-blue" />
+        <span className="oil-plane oil-plane-window" />
+        <span className="oil-plane oil-plane-floor-blue" />
+        <span className="oil-plane oil-plane-threshold" />
+        <span className="oil-plane oil-plane-light-seam" />
+        <span className="oil-plane oil-plane-warm" />
+        <span className="oil-plane oil-plane-floor-brown" />
+        <span className="oil-plane oil-plane-plant" />
+        <span className="oil-plane oil-plane-lamp" />
       </div>
-      <Image
-        alt=""
-        aria-hidden="true"
-        className="painterly-texture painterly-texture-home"
-        fill
-        priority
-        src="/figma-assets/painterly-texture-homepage.png"
-      />
-      <section aria-labelledby="home-title" className="home-panel">
+
+      <section className="oil-brand home-brand">
         <h1 id="home-title">Talk to me</h1>
-        <p className="lead">对话过去的声音，靠近此刻的自己</p>
+        <span className="brand-rule" aria-hidden="true" />
+        <p>对话过去的声音，靠近此刻的自己</p>
       </section>
 
-      <section aria-label="专家卡片" className="expert-grid home-expert-list">
-        {EXPERTS.map((expert) => (
+      <section aria-label="选择一位历史心理学家" className="home-expert-list">
+        {experts.map((expert) => (
           <ExpertCard expert={expert} key={expert.slug} />
         ))}
       </section>
@@ -35,11 +35,6 @@ export default function Home() {
       <p className="home-safety-note">
         本工具为基于历史人物思想风格的教育性角色模拟，不提供诊断、治疗或临床服务。
       </p>
-      <div className="ambient-leaves" aria-hidden="true">
-        <Image alt="" height={26} src="/figma-assets/ambient-plant-leaf-1.svg" width={80} />
-        <Image alt="" height={28} src="/figma-assets/ambient-plant-leaf-2.svg" width={88} />
-        <Image alt="" height={30} src="/figma-assets/ambient-plant-leaf-3.svg" width={92} />
-      </div>
     </main>
   );
 }

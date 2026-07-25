@@ -40,17 +40,14 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   const conversationMode = mode ?? "self-reflection";
 
   return (
-    <main className="page-shell">
-      <div className="link-row chat-page-links">
-        <Link className="back-link" href="/">
-          返回首页
-        </Link>
-        <Link className="back-link" href="/about">
-          安全与隐私说明
-        </Link>
-      </div>
+    <main className="chat-page-shell">
       <ChatWorkspace
-        expert={{ slug: expert.slug, nameEn: expert.nameEn, nameZh: expert.nameZh }}
+        expert={{
+          slug: expert.slug,
+          nameEn: expert.nameEn,
+          nameZh: expert.nameZh,
+          era: expert.era
+        }}
         mode={conversationMode}
       />
     </main>

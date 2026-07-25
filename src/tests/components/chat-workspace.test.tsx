@@ -6,7 +6,8 @@ import { ChatWorkspace } from "@/components/chat/chat-workspace";
 const expert = {
   slug: "winnicott" as const,
   nameEn: "Donald Winnicott",
-  nameZh: "温尼科特"
+  nameZh: "温尼科特",
+  era: "1896-1971"
 };
 
 function renderWorkspace() {
@@ -58,33 +59,35 @@ describe("ChatWorkspace", () => {
   it("disables empty submissions", () => {
     renderWorkspace();
 
-    expect(screen.getByRole("button", { name: /发送/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /送出/i })).toBeDisabled();
   });
 
   it("does not expose raw internal mode labels in the chat header", () => {
     renderWorkspace();
 
-    expect(screen.getByText("温尼科特")).toBeInTheDocument();
+    expect(screen.getByText(/温尼科特 · 1896-1971/)).toBeInTheDocument();
     expect(screen.queryByText(/self-reflection/)).not.toBeInTheDocument();
     expect(screen.queryByText(/theory-classroom/)).not.toBeInTheDocument();
     expect(screen.queryByText(/critical-discussion/)).not.toBeInTheDocument();
   });
 
-  it("uses a reflective conversation-room shell instead of a messenger clone", () => {
+  it("uses an oil-paint conversation-room shell instead of a messenger clone", () => {
     const { container } = renderWorkspace();
 
-    expect(container.querySelector(".chat-workspace")).toHaveClass("thought-room");
+    expect(container.querySelector(".chat-workspace")).toHaveClass("oil-room");
+    expect(container.querySelector(".oil-plane-blue")).toBeInTheDocument();
+    expect(container.querySelector(".oil-plane-warm")).toBeInTheDocument();
     expect(screen.getByText(/从一句简单的话开始/)).toBeInTheDocument();
-    expect(screen.queryByText(/微信/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/微信|ChatGPT|Assistant|User|AI/)).not.toBeInTheDocument();
   });
 
-  it("sends a message and streams an expert reply in messenger layout", async () => {
+  it("sends a message and streams an expert reply as quiet text traces", async () => {
     const { container } = renderWorkspace();
 
     fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "How do I think about play?" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
+    fireEvent.click(screen.getByRole("button", { name: /送出/i }));
 
     expect(fetch).toHaveBeenCalledWith(
       "/api/chat",
@@ -95,12 +98,10 @@ describe("ChatWorkspace", () => {
     await waitFor(() => {
       expect(screen.getByText("Hello there")).toBeInTheDocument();
     });
-    expect(screen.getAllByText("Donald Winnicott").length).toBeGreaterThan(0);
+    expect(screen.getByText(/温尼科特 · 1896-1971/)).toBeInTheDocument();
     expect(screen.queryByText("Assistant")).not.toBeInTheDocument();
     expect(screen.queryByText("User")).not.toBeInTheDocument();
     expect(screen.queryByText("AI")).not.toBeInTheDocument();
-    expect(container.querySelector(".chat-message.user .message-avatar")).toBeInTheDocument();
-    expect(container.querySelector(".chat-message.assistant .message-avatar")).toBeInTheDocument();
     expect(container.querySelector(".chat-message.user .message-bubble")).toBeInTheDocument();
     expect(container.querySelector(".chat-message.assistant .message-bubble")).toBeInTheDocument();
   });
@@ -113,7 +114,7 @@ describe("ChatWorkspace", () => {
     fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "Please answer progressively" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
+    fireEvent.click(screen.getByRole("button", { name: /送出/i }));
 
     stream.enqueue("First");
 
@@ -137,7 +138,7 @@ describe("ChatWorkspace", () => {
     fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "First message" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
+    fireEvent.click(screen.getByRole("button", { name: /送出/i }));
 
     await screen.findByText("发送失败，可以点重试。");
 
@@ -161,7 +162,7 @@ describe("ChatWorkspace", () => {
     fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "Please answer slowly" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
+    fireEvent.click(screen.getByRole("button", { name: /送出/i }));
 
     await screen.findByRole("button", { name: /停止/i });
     fireEvent.click(screen.getByRole("button", { name: /停止/i }));
@@ -190,7 +191,7 @@ describe("ChatWorkspace", () => {
     fireEvent.change(screen.getByLabelText(/输入消息/i), {
       target: { value: "Please do not come back after clear" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /发送/i }));
+    fireEvent.click(screen.getByRole("button", { name: /送出/i }));
     await screen.findByText("Please do not come back after clear");
 
     fireEvent.click(screen.getByRole("button", { name: /清空/i }));

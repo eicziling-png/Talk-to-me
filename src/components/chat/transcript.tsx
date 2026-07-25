@@ -35,7 +35,7 @@ export function Transcript({ expert, messages }: TranscriptProps) {
   if (messages.length === 0) {
     return (
       <section aria-label="聊天记录" className="chat-transcript" ref={transcriptRef}>
-        <p className="empty-transcript">从一句简单的话开始，和 {expert.nameEn} 慢慢说。</p>
+        <p className="empty-transcript">从一句简单的话开始，和{expert.nameZh}慢慢说。</p>
       </section>
     );
   }
@@ -45,16 +45,16 @@ export function Transcript({ expert, messages }: TranscriptProps) {
       {messages.map((message) => (
         <article className={`chat-message ${message.role}`} key={message.id}>
           <span className={`message-avatar ${message.role === "user" ? "user-avatar" : "expert-avatar"}`} aria-hidden="true">
-            {message.role === "user" ? "我" : isSafetyReply(message.content) ? "!" : "🧠"}
+            {message.role === "user" ? "我" : isSafetyReply(message.content) ? "!" : expert.nameZh.slice(0, 1)}
           </span>
           <div className="message-stack">
             {message.role === "assistant" ? (
-              <p className="message-sender">{isSafetyReply(message.content) ? "安全提醒" : expert.nameEn}</p>
+              <p className="message-sender">{isSafetyReply(message.content) ? "安全提醒" : expert.nameZh}</p>
             ) : null}
             <div className="message-bubble">
               <p>{message.content}</p>
               {message.role === "assistant" && message.complete === false ? (
-                <p className="incomplete-marker">消息中断，可点重试继续。</p>
+                <p className="incomplete-marker">消息中断，可点击重试继续。</p>
               ) : null}
             </div>
           </div>

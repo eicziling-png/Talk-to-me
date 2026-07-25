@@ -31,13 +31,13 @@ export function Composer({
         disabled={disabled}
         id="chat-message"
         onChange={(event) => onChange(event.target.value)}
-        placeholder="说点什么…"
+        placeholder="写下一句话，留在这个房间里…"
         rows={1}
         value={value}
       />
       <div className="composer-actions">
         <button disabled={disabled || value.trim().length === 0} type="submit">
-          发送
+          送出
         </button>
         {showStop ? (
           <button onClick={onStop} type="button">
