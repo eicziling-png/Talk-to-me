@@ -6,6 +6,10 @@ import Home from "@/app/page";
 import { EXPERT_DISPLAY_COPY, FIGMA_HOME_ORDER } from "@/components/expert/display-copy";
 import { EXPERTS } from "@/domain/experts/registry";
 
+function formatEra(era: string): string {
+  return era.replace("-", "–");
+}
+
 describe("home expert browsing", () => {
   it("renders all expert entrances directly on the home page", () => {
     render(<Home />);
@@ -19,10 +23,11 @@ describe("home expert browsing", () => {
     expect(screen.queryByRole("link", { name: "选择专家" })).not.toBeInTheDocument();
 
     for (const expert of EXPERTS) {
-      const card = screen.getByRole("article", { name: `${expert.nameZh}，${expert.era}` });
+      const era = formatEra(expert.era);
+      const card = screen.getByRole("article", { name: `${expert.nameZh}，${era}` });
       const link = within(card).getByRole("link", { name: `开始与${expert.nameZh}对话` });
 
-      expect(within(card).getByText(`${expert.nameZh} · ${expert.era}`)).toBeInTheDocument();
+      expect(within(card).getByText(`${expert.nameZh} · ${era}`)).toBeInTheDocument();
       expect(within(card).getByText(EXPERT_DISPLAY_COPY[expert.slug].poeticLine)).toBeInTheDocument();
       expect(link).toHaveAttribute("href", `/chat/${expert.slug}`);
     }
@@ -50,7 +55,7 @@ describe("home expert browsing", () => {
     render(<Home />);
 
     expect(screen.queryByRole("article", { name: /Carl Gustav Jung/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("article", { name: "雅克·拉康，1901-1981" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "雅克·拉康，1901–1981" })).toBeInTheDocument();
     expect(screen.queryByText(/collective unconscious/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/archetype/i)).not.toBeInTheDocument();
   });
@@ -64,7 +69,7 @@ describe("direct chat route", () => {
     });
     render(view);
 
-    expect(screen.getByText(/欧文·亚隆 · 1931-/)).toBeInTheDocument();
+    expect(screen.getByText(/欧文·亚隆 · 1931–/)).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /请选择有效的对话方式/i })).not.toBeInTheDocument();
   });
 });

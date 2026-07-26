@@ -65,7 +65,7 @@ describe("ChatWorkspace", () => {
   it("does not expose raw internal mode labels in the chat header", () => {
     renderWorkspace();
 
-    expect(screen.getByText(/温尼科特 · 1896-1971/)).toBeInTheDocument();
+    expect(screen.getByText(/温尼科特 · 1896–1971/)).toBeInTheDocument();
     expect(screen.queryByText(/self-reflection/)).not.toBeInTheDocument();
     expect(screen.queryByText(/theory-classroom/)).not.toBeInTheDocument();
     expect(screen.queryByText(/critical-discussion/)).not.toBeInTheDocument();
@@ -98,7 +98,7 @@ describe("ChatWorkspace", () => {
     await waitFor(() => {
       expect(screen.getByText("Hello there")).toBeInTheDocument();
     });
-    expect(screen.getByText(/温尼科特 · 1896-1971/)).toBeInTheDocument();
+    expect(screen.getByText(/温尼科特 · 1896–1971/)).toBeInTheDocument();
     expect(screen.queryByText("Assistant")).not.toBeInTheDocument();
     expect(screen.queryByText("User")).not.toBeInTheDocument();
     expect(screen.queryByText("AI")).not.toBeInTheDocument();

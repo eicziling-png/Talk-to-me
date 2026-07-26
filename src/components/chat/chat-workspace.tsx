@@ -28,6 +28,7 @@ type ChatWorkspaceProps = {
 
 export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   const display = EXPERT_DISPLAY_COPY[expert.slug];
+  const era = formatEra(expert.era);
   const initialSession = useMemo(
     () =>
       createBrowserSession({
@@ -172,8 +173,6 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
         <span className="oil-plane oil-plane-light-seam" />
         <span className="oil-plane oil-plane-warm" />
         <span className="oil-plane oil-plane-floor-brown" />
-        <span className="oil-plane oil-plane-plant" />
-        <span className="oil-plane oil-plane-lamp" />
       </div>
 
       <section className="oil-brand chat-brand" aria-label="Talk to me">
@@ -185,7 +184,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
       <header className="chat-header">
         <div className="selected-expert-card">
           <p id="chat-title">
-            {expert.nameZh} · {expert.era}
+            {expert.nameZh} · {era}
           </p>
           <span>{display.poeticLine}</span>
         </div>
@@ -300,6 +299,10 @@ function markLastAssistantIncomplete(messages: BrowserMessage[]): BrowserMessage
   return messages.map((message, index) =>
     index === lastAssistantIndex ? { ...message, content: message.content || "已暂停。", complete: false } : message
   );
+}
+
+function formatEra(era: string): string {
+  return era.replace("-", "–");
 }
 
 function delay(ms: number): Promise<void> {
