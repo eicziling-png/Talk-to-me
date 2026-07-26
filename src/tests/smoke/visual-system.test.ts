@@ -39,6 +39,9 @@ describe("oil-paint spatial visual system", () => {
   it("structures chat as header, conversation, and composer zones", () => {
     expect(css).toContain(".chat-room-panel");
     expect(css).toContain("grid-template-rows: minmax(86px, 15%) minmax(0, 70%) minmax(104px, 15%)");
+    expect(css).toContain(".chat-room-conversation");
+    expect(css).toContain("padding-bottom: clamp(18px, 2vh, 22px)");
+    expect(css).toContain("scrollbar-gutter: stable");
   });
 
   it("uses meaningful painterly light, not SaaS surface effects", () => {
