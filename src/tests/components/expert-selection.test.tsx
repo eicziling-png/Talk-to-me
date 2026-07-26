@@ -46,6 +46,7 @@ describe("home expert browsing", () => {
     expect(screen.getByRole("main")).toHaveClass("oil-room");
     expect(screen.getByRole("main").querySelector(".oil-plane-blue")).toBeInTheDocument();
     expect(screen.getByRole("main").querySelector(".oil-plane-warm")).toBeInTheDocument();
+    expect(screen.getByRole("main").querySelector(".oil-plane-plant")).not.toBeInTheDocument();
     expect(screen.queryByText("经典精神分析")).not.toBeInTheDocument();
     expect(screen.queryByText("拉康派精神分析")).not.toBeInTheDocument();
     expect(screen.queryByText("英国客体关系")).not.toBeInTheDocument();

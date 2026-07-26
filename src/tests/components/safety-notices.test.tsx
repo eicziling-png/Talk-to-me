@@ -8,15 +8,8 @@ import RootLayout from "@/app/layout";
 import Home from "@/app/page";
 import { CrisisNotice, CRISIS_RESOURCES } from "@/components/safety/crisis-notice";
 
-function expectSafetyAndPrivacyLinks() {
-  expect(screen.getByRole("link", { name: /安全与隐私说明/i })).toHaveAttribute(
-    "href",
-    "/about"
-  );
-}
-
 describe("safety and privacy surfaces", () => {
-  it("links safety and privacy information from the shared layout", () => {
+  it("keeps safety and privacy information reachable from the shared layout", () => {
     const html = renderToStaticMarkup(
       <RootLayout>
         <main>
@@ -29,23 +22,27 @@ describe("safety and privacy surfaces", () => {
     expect(html).toContain("安全与隐私说明");
   });
 
-  it("keeps safety and privacy information reachable from routed pages that carry safety detail", async () => {
-    const routes = [
+  it("shows compact safety copy on the homepage only as a low-key footer note", () => {
+    render(<Home />);
+
+    expect(screen.getByText("本工具为基于历史人物思想风格的角色模拟，不提供诊断、治疗或临床服务。")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "安全与隐私说明" })).toHaveAttribute("href", "/about");
+    expect(screen.queryByText(/教育性角色模拟/)).not.toBeInTheDocument();
+  });
+
+  it("removes the safety and privacy link from the chat surface", async () => {
+    render(
       await ChatPage({
         params: Promise.resolve({ slug: "winnicott" }),
         searchParams: Promise.resolve({ mode: "self-reflection" })
-      }),
-      <AboutPage key="about" />
-    ];
+      })
+    );
 
-    for (const route of routes) {
-      const view = render(route);
-      expectSafetyAndPrivacyLinks();
-      view.unmount();
-    }
+    expect(screen.queryByRole("link", { name: "安全与隐私说明" })).not.toBeInTheDocument();
+    expect(screen.getByText("这段聊天只保留在当前页面，刷新或关闭后会消失。")).toBeInTheDocument();
   });
 
-  it("publishes methodology, privacy, authenticity, and emergency-boundary copy", () => {
+  it("publishes methodology, privacy, authenticity, and emergency-boundary copy on the about page", () => {
     render(<AboutPage />);
 
     expect(screen.getByRole("heading", { name: /安全与隐私说明/i })).toBeInTheDocument();

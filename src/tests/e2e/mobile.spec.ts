@@ -1,12 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("mobile layout keeps primary navigation, expert cards, and safety copy usable", async ({
-  page
-}, testInfo) => {
+test("mobile layout keeps expert cards and safety copy usable", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("mobile"), "mobile-only acceptance");
 
   await page.goto("/");
-  await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible();
   await expect(page.getByRole("link", { name: "安全与隐私说明" }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Talk to me" })).toBeVisible();
 

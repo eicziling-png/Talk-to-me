@@ -33,11 +33,7 @@ export function Transcript({ expert, messages }: TranscriptProps) {
   }, [messages]);
 
   if (messages.length === 0) {
-    return (
-      <section aria-label="聊天记录" className="chat-transcript" ref={transcriptRef}>
-        <p className="empty-transcript">从一句简单的话开始，和{expert.nameZh}慢慢说。</p>
-      </section>
-    );
+    return <section aria-label="聊天记录" className="chat-transcript" ref={transcriptRef} />;
   }
 
   return (

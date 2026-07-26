@@ -12,7 +12,6 @@ export default function Home() {
       aria-labelledby="home-title"
       className="home-oil-room"
       includeLamp
-      includePlant
       tag="main"
       variant="home"
     >
@@ -28,9 +27,10 @@ export default function Home() {
         ))}
       </section>
 
-      <p className="home-safety-note">
-        本工具为基于历史人物思想风格的教育性角色模拟，不提供诊断、治疗或临床服务。
-      </p>
+      <div className="home-safety-note">
+        <p>本工具为基于历史人物思想风格的角色模拟，不提供诊断、治疗或临床服务。</p>
+        <a href="/about">安全与隐私说明</a>
+      </div>
     </PaintingRoomLayout>
   );
 }

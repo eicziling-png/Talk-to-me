@@ -31,7 +31,6 @@ export function Composer({
         disabled={disabled}
         id="chat-message"
         onChange={(event) => onChange(event.target.value)}
-        placeholder="写下一句话，留在这个房间里…"
         rows={1}
         value={value}
       />

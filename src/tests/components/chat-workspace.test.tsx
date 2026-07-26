@@ -77,7 +77,10 @@ describe("ChatWorkspace", () => {
     expect(container.querySelector(".chat-workspace")).toHaveClass("oil-room");
     expect(container.querySelector(".oil-plane-blue")).toBeInTheDocument();
     expect(container.querySelector(".oil-plane-warm")).toBeInTheDocument();
-    expect(screen.getByText(/从一句简单的话开始/)).toBeInTheDocument();
+    expect(screen.queryByText(/从一句简单的话开始/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/输入消息/i)).not.toHaveAttribute("placeholder");
+    expect(screen.getByText("这段聊天只保留在当前页面，刷新或关闭后会消失。")).toBeInTheDocument();
+    expect(screen.queryByText("安全与隐私说明")).not.toBeInTheDocument();
     expect(screen.queryByText(/微信|ChatGPT|Assistant|User|AI/)).not.toBeInTheDocument();
   });
 
