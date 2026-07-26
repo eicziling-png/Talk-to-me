@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 
 import { EXPERT_DISPLAY_COPY } from "@/components/expert/display-copy";
+import { PaintingRoomLayout } from "@/components/layout/painting-room-layout";
 import {
   createBrowserSession,
   type BrowserMessage,
@@ -164,59 +165,53 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   }
 
   return (
-    <section className="chat-workspace oil-room chat-oil-room" aria-labelledby="chat-title">
-      <div className="oil-space" aria-hidden="true">
-        <span className="oil-plane oil-plane-blue" />
-        <span className="oil-plane oil-plane-window" />
-        <span className="oil-plane oil-plane-floor-blue" />
-        <span className="oil-plane oil-plane-threshold" />
-        <span className="oil-plane oil-plane-light-seam" />
-        <span className="oil-plane oil-plane-warm" />
-        <span className="oil-plane oil-plane-floor-brown" />
-      </div>
-
+    <PaintingRoomLayout aria-labelledby="chat-title" className="chat-workspace chat-oil-room" variant="chat">
       <section className="oil-brand chat-brand" aria-label="Talk to me">
         <h2>Talk to me</h2>
         <span className="brand-rule" aria-hidden="true" />
         <p>对话过去的声音，靠近此刻的自己</p>
       </section>
 
-      <header className="chat-header">
-        <div className="selected-expert-card">
-          <p id="chat-title">
-            {expert.nameZh} · {era}
-          </p>
-          <span>{display.poeticLine}</span>
+      <div className="chat-room-panel">
+        <div className="chat-room-header">
+          <header className="chat-header">
+            <div className="selected-expert-card">
+              <p id="chat-title">
+                {expert.nameZh} · {era}
+              </p>
+              <span>{display.poeticLine}</span>
+            </div>
+            <div className="chat-header-actions" aria-label="会话操作">
+              <ExportButton session={session} />
+              <button onClick={clear} type="button">
+                清空
+              </button>
+            </div>
+          </header>
+          <SessionNotice />
         </div>
-        <div className="chat-header-actions" aria-label="会话操作">
-          <ExportButton session={session} />
-          <button onClick={clear} type="button">
-            清空
-          </button>
+
+        <div className="chat-room-conversation">
+          <Transcript expert={expert} messages={session.messages} />
+          {session.status === "failed" ? <p role="alert">发送失败，可以点重试。</p> : null}
+          {session.status === "interrupted" ? <p role="alert">消息中断。</p> : null}
+          <div className="retry-row">
+            <button disabled={!failedMessage || session.status === "streaming"} onClick={retry} type="button">
+              重试
+            </button>
+          </div>
         </div>
-      </header>
 
-      <SessionNotice />
-      <Transcript expert={expert} messages={session.messages} />
-
-      {session.status === "failed" ? <p role="alert">发送失败，可以点重试。</p> : null}
-      {session.status === "interrupted" ? <p role="alert">消息中断。</p> : null}
-
-      <div className="retry-row">
-        <button disabled={!failedMessage || session.status === "streaming"} onClick={retry} type="button">
-          重试
-        </button>
+        <Composer
+          disabled={session.status === "streaming"}
+          onChange={setDraft}
+          onStop={stopStreaming}
+          onSubmit={() => void submitMessage()}
+          showStop={session.status === "streaming"}
+          value={draft}
+        />
       </div>
-
-      <Composer
-        disabled={session.status === "streaming"}
-        onChange={setDraft}
-        onStop={stopStreaming}
-        onSubmit={() => void submitMessage()}
-        showStop={session.status === "streaming"}
-        value={draft}
-      />
-    </section>
+    </PaintingRoomLayout>
   );
 }
 

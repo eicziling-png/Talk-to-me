@@ -23,6 +23,24 @@ describe("oil-paint spatial visual system", () => {
     expect(css).toContain(".oil-plane-floor-brown");
   });
 
+  it("uses one shared viewport layout with state-specific room ratios", () => {
+    expect(css).toContain(".painting-room-layout");
+    expect(css).toContain("width: 100vw");
+    expect(css).toContain("min-height: 100vh");
+    expect(css).toContain("--room-blue: 57%");
+    expect(css).toContain("--room-warm: 43%");
+    expect(css).toContain("--room-blue: 43%");
+    expect(css).toContain("--room-warm: 57%");
+    expect(css).not.toContain("width: 38%");
+    expect(css).not.toContain("left: 38%");
+    expect(css).not.toContain("width: 62%");
+  });
+
+  it("structures chat as header, conversation, and composer zones", () => {
+    expect(css).toContain(".chat-room-panel");
+    expect(css).toContain("grid-template-rows: minmax(86px, 15%) minmax(0, 70%) minmax(104px, 15%)");
+  });
+
   it("uses meaningful painterly light, not SaaS surface effects", () => {
     expect(css).toMatch(/linear-gradient|radial-gradient/i);
     expect(css).not.toMatch(/backdrop-filter|glassmorphism|neon/i);
