@@ -21,15 +21,17 @@ export function Transcript({ expert, messages }: TranscriptProps) {
       return;
     }
 
-    if (typeof transcript.scrollTo === "function") {
-      transcript.scrollTo({
-        top: transcript.scrollHeight,
+    const scrollContainer = transcript.closest<HTMLElement>(".chat-room-conversation") ?? transcript;
+
+    if (typeof scrollContainer.scrollTo === "function") {
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
         behavior: "smooth"
       });
       return;
     }
 
-    transcript.scrollTop = transcript.scrollHeight;
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
   }, [messages]);
 
   if (messages.length === 0) {
