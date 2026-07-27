@@ -202,14 +202,16 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
           </div>
         </div>
 
-        <Composer
-          disabled={session.status === "streaming"}
-          onChange={setDraft}
-          onStop={stopStreaming}
-          onSubmit={() => void submitMessage()}
-          showStop={session.status === "streaming"}
-          value={draft}
-        />
+        <div className="chat-composer-slot">
+          <Composer
+            disabled={session.status === "streaming"}
+            onChange={setDraft}
+            onStop={stopStreaming}
+            onSubmit={() => void submitMessage()}
+            showStop={session.status === "streaming"}
+            value={draft}
+          />
+        </div>
       </div>
     </PaintingRoomLayout>
   );

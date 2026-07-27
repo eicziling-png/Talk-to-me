@@ -43,7 +43,11 @@ describe("oil-paint spatial visual system", () => {
     expect(css).toContain(".chat-room-conversation");
     expect(css).toContain("overflow-y: auto");
     expect(css).toContain("scrollbar-gutter: stable");
-    expect(css).toContain("flex: 0 0 15%");
+    expect(css).toContain(".chat-composer-slot");
+    expect(css).toContain("flex: 0 0 calc(20vh - var(--chat-panel-bottom) + 36px)");
+    expect(css).toContain("justify-content: flex-end");
+    expect(css).toContain("flex: 0 0 127px");
+    expect(css).toContain("padding: clamp(22px, 3.2vh, 30px) 0 36px");
   });
 
   it("uses meaningful painterly light, not SaaS surface effects", () => {
