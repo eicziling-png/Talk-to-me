@@ -120,7 +120,7 @@ export const EXPERT_VOICE_PROFILES: ExpertVoiceProfile[] = [
   },
   {
     slug: "klein",
-    openingStyle: ["直接从眼前关系说起。"],
+    openingStyle: ["先从用户此刻说的事开始，不急着解释。"],
     deepeningStyle: ["看看爱与害怕、愤怒与内疚、矛盾如何同时出现在当前关系里。"],
     wordingTendencies: ["一方面……另一方面……", "这里好像有矛盾。"],
     avoidTemplates: ["不要预设用户有童年创伤。"],
