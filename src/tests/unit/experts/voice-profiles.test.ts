@@ -17,6 +17,8 @@ const forbiddenVisibleFraming = [
   "数据库"
 ];
 
+const sharedDeepExplorationQuestion = "最近总觉得自己不知道在忙什么，但又停不下来。";
+
 describe("expert voice profiles", () => {
   it("defines seven Chinese master-voice profiles with Lacan replacing Jung", () => {
     expect(EXPERT_VOICE_PROFILES.map((profile) => profile.slug)).toEqual([
@@ -67,6 +69,34 @@ describe("expert voice profiles", () => {
       expect(profile.deepeningStyle.join("\n")).toContain(deepening);
       expect(profile.wordingTendencies.join("\n")).toContain(wording);
       expect(profile.avoidTemplates.join("\n")).toContain(avoidance);
+    }
+  });
+
+  it("keeps seven distinct deepening lenses for the same stuck-busy experience", () => {
+    const semanticLenses = {
+      freud: ["梦", "欲望"],
+      lacan: ["重复", "说给谁", "欲望"],
+      bion: ["还没有成形"],
+      klein: ["爱", "害怕", "愤怒", "内疚", "矛盾"],
+      winnicott: ["活着", "真实", "顺从", "空间"],
+      kohut: ["羞耻", "崩塌", "被看见"],
+      yalom: ["选择", "责任", "孤独", "意义"]
+    } as const;
+    const deepeningStyles = EXPERT_VOICE_PROFILES.map((profile) =>
+      profile.deepeningStyle.join("\n")
+    );
+
+    expect(sharedDeepExplorationQuestion).toContain("停不下来");
+    expect(deepeningStyles).toHaveLength(7);
+    expect(new Set(deepeningStyles).size).toBe(deepeningStyles.length);
+
+    for (const profile of EXPERT_VOICE_PROFILES) {
+      const deepeningText = profile.deepeningStyle.join("\n");
+
+      expect(profile.deepeningStyle.length).toBeGreaterThan(0);
+      for (const marker of semanticLenses[profile.slug]) {
+        expect(deepeningText).toContain(marker);
+      }
     }
   });
 

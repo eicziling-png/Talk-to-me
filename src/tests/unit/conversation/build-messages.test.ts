@@ -8,6 +8,7 @@ import { buildModelMessages } from "@/server/orchestration/build-messages";
 import { runChat, type ChatServiceDependencies } from "@/server/orchestration/chat-service";
 
 const expert = getExpert("winnicott");
+const sharedDeepExplorationQuestion = "最近总觉得自己不知道在忙什么，但又停不下来。";
 
 if (!expert) {
   throw new Error("Expected Winnicott profile to exist");
@@ -165,6 +166,44 @@ describe("buildModelMessages", () => {
         profile.languageStyle,
         profile.likelyQuestions
       ]) {
+        for (const guidance of field) {
+          expect(persona?.content).toContain(guidance);
+        }
+      }
+    }
+  });
+
+  it("exposes every configured voice field for each expert in the shared deep-exploration context", () => {
+    const history = Array.from({ length: 4 }, (_, index) => ({
+      role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
+      content: `shared-deep-history-${index}`
+    }));
+
+    for (const profile of EXPERT_VOICE_PROFILES) {
+      const profileExpert = getExpert(profile.slug);
+
+      if (!profileExpert) {
+        throw new Error(`Expected ${profile.slug} profile to exist`);
+      }
+
+      const messages = buildModelMessages(
+        makeRequest({
+          expertSlug: profile.slug,
+          input: sharedDeepExplorationQuestion,
+          history
+        }),
+        profileExpert
+      );
+      const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+      expect(persona?.content).toContain("Persona identity");
+      for (const field of [
+        profile.openingStyle,
+        profile.deepeningStyle,
+        profile.wordingTendencies,
+        profile.avoidTemplates
+      ]) {
+        expect(field.length).toBeGreaterThan(0);
         for (const guidance of field) {
           expect(persona?.content).toContain(guidance);
         }
