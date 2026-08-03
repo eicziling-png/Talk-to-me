@@ -1,8 +1,36 @@
 import type { ConversationRequest } from "@/domain/conversation/types";
 
-export function renderConversationEngineGuidance(_request: ConversationRequest): string {
+export type ConversationStage = "first-interaction" | "active-sharing" | "deep-exploration";
+
+export function getConversationStage(request: ConversationRequest): ConversationStage {
+  if (request.history.length === 0 && !request.summary && isSimpleGreeting(request.input)) {
+    return "first-interaction";
+  }
+
+  if (request.history.length >= 4) {
+    return "deep-exploration";
+  }
+
+  return "active-sharing";
+}
+
+export function isSimpleGreeting(input: string): boolean {
+  const normalized = input
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/[!！?？。,.，、~～…]+$/u, "")
+    .trim();
+
+  return /^(?:hi|hello|hey)(?:\s+there)?$|^(?:你好|您好|嗨|在吗|有人吗)(?:呀|啊|喂)?$/u.test(normalized);
+}
+
+export function renderConversationEngineGuidance(request: ConversationRequest): string {
+  const stage = getConversationStage(request);
+  const stageGuidance = renderStageGuidance(stage);
+
   return [
     "Conversation Engine",
+    stageGuidance,
     "你正在进行真实聊天。",
     "你的第一任务不是分析用户，而是回应用户。",
     "你只能根据用户已经表达的信息回应。",
@@ -28,5 +56,32 @@ export function renderConversationEngineGuidance(_request: ConversationRequest):
     "回复 20-120 字；只有用户明确请求深入探索或理论讨论时，才可以到 200 字。",
     "不输出小标题、列表、分析步骤或方法说明。",
     "像有阅历、有心理学深度的人自然聊天。"
+  ].join("\n");
+}
+
+function renderStageGuidance(stage: ConversationStage): string {
+  if (stage === "first-interaction") {
+    return [
+      "当前阶段：第一次互动（简单问候）",
+      "目标：像真实的人第一次见面，只用 1-2 句话自然回应，并给用户自由选择聊天方向。",
+      "不要把问候解释为焦虑、孤独、犹豫或心理困扰。",
+      "不要使用治疗式安慰语言，不要从问候推测隐藏需求、童年经历或创伤。",
+      "不要调用专家的关注重点或常见提问主动引出心理主题；除非用户先提及，不要主动提焦虑、孤独、创伤、童年、关系困扰、喘气或被支持。",
+      "专家人格此时只影响语气和词汇，不改变回应主题。"
+    ].join("\n");
+  }
+
+  if (stage === "deep-exploration") {
+    return [
+      "当前阶段：持续交流（可能进入深入探索）",
+      "只有当前消息仍然延续历史主题，或用户明确要求深入时，才允许进入更深的专家视角。",
+      "如果用户换了话题、开始闲聊或只作简短回应，立即退回自然聊天。"
+    ].join("\n");
+  }
+
+  return [
+    "当前阶段：用户开始分享",
+    "先回应用户明确说出的事实、感受、问题或聊天意图，不要自动进入深层解释。",
+    "只有用户持续表达某个主题或明确请求深入时，才允许使用更鲜明的专家视角。"
   ].join("\n");
 }

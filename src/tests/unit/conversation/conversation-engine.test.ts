@@ -29,6 +29,26 @@ describe("conversation engine", () => {
     expect(guidance).not.toContain("聊天状态：");
   });
 
+  it("marks a greeting-only first turn as a first interaction", () => {
+    const guidance = renderConversationEngineGuidance(makeRequest("hi"));
+
+    expect(guidance).toContain("当前阶段：第一次互动（简单问候）");
+    expect(guidance).toContain("只用 1-2 句话");
+    expect(guidance).toContain("不要把问候解释为焦虑、孤独、犹豫或心理困扰");
+    expect(guidance).toContain("不要调用专家的关注重点或常见提问主动引出心理主题");
+    expect(guidance).toContain("给用户自由选择聊天方向");
+  });
+
+  it("does not keep the first-interaction guard after history exists", () => {
+    const guidance = renderConversationEngineGuidance({
+      ...makeRequest("hi"),
+      history: [{ role: "assistant", content: "你好，很高兴见到你。" }]
+    });
+
+    expect(guidance).not.toContain("当前阶段：第一次互动（简单问候）");
+    expect(guidance).toContain("当前阶段：用户开始分享");
+  });
+
   it("keeps all experts under the same latest-message and history-first rules", () => {
     for (const expert of EXPERTS) {
       const guidance = renderConversationEngineGuidance({
