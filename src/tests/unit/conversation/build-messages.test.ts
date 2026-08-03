@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { getExpert } from "@/domain/experts/registry";
+import { EXPERT_VOICE_PROFILES, getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
 import { ConversationRequestSchema } from "@/domain/conversation/schema";
 import type { ConversationRequest } from "@/domain/conversation/types";
 import { buildModelMessages } from "@/server/orchestration/build-messages";
@@ -57,6 +58,75 @@ describe("buildModelMessages", () => {
     expect(engine?.content).toContain("如果用户只说：“一般”“还好”“嗯”“没事”，不要假设用户想展开深层心理探索");
     expect(engine?.content).toContain("上下文一致性检查");
     expect(engine?.content).toContain("回复前内部检查");
+  });
+
+  it("adds a first-interaction guard for a greeting-only first message", () => {
+    const messages = buildModelMessages(makeRequest({ input: "hello" }), expert);
+    const engine = messages.find((message) => message.content.includes("Conversation Engine"));
+
+    expect(engine?.content).toContain("当前阶段：第一次互动（简单问候）");
+    expect(engine?.content).toContain("只用 1-2 句话");
+    expect(engine?.content).toContain("不要把问候解释为焦虑、孤独、犹豫或心理困扰");
+    expect(engine?.content).toContain("不要使用治疗式安慰语言");
+  });
+
+  it("does not preload expert focus questions into a greeting-only first turn", () => {
+    const messages = buildModelMessages(makeRequest({ input: "hi" }), expert);
+    const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+    expect(persona?.content).toContain("首轮只保留专家气质和自然寒暄");
+    expect(persona?.content).not.toContain("你会自然注意到");
+    expect(persona?.content).not.toContain("你容易提出的问题");
+  });
+
+  it("renders every configured voice field for each expert during active sharing", () => {
+    for (const profile of EXPERT_VOICE_PROFILES) {
+      const profileExpert = getExpert(profile.slug);
+
+      if (!profileExpert) {
+        throw new Error(`Expected ${profile.slug} profile to exist`);
+      }
+
+      const messages = buildModelMessages(
+        makeRequest({
+          expertSlug: profile.slug,
+          input: "I want to continue discussing a pattern that keeps repeating."
+        }),
+        profileExpert
+      );
+      const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+      for (const field of [
+        profile.openingStyle,
+        profile.deepeningStyle,
+        profile.wordingTendencies,
+        profile.avoidTemplates
+      ]) {
+        for (const guidance of field) {
+          expect(persona?.content).toContain(guidance);
+        }
+      }
+    }
+  });
+
+  it("keeps a greeting-only first turn neutral while retaining opening guidance", () => {
+    const profile = getExpertVoiceProfile("winnicott");
+    const messages = buildModelMessages(makeRequest({ input: "hello" }), expert);
+    const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+    if (!profile) {
+      throw new Error("Expected Winnicott voice profile to exist");
+    }
+
+    for (const guidance of profile.openingStyle) {
+      expect(persona?.content).toContain(guidance);
+    }
+    for (const attention of profile.attendsTo) {
+      expect(persona?.content).not.toContain(attention);
+    }
+    for (const question of profile.likelyQuestions) {
+      expect(persona?.content).not.toContain(question);
+    }
   });
 
   it("uses a Chinese master-voice prompt that hides theory and forbids AI framing", () => {
@@ -245,6 +315,33 @@ describe("buildModelMessages", () => {
     expect(laterTurnText).toContain("history-14");
     expect(laterTurnText).toContain("history-23");
     expect((laterPersona?.content.length ?? 0)).toBeLessThan(firstPersona?.content.length ?? 0);
+  });
+
+  it("keeps differentiated deepening, wording, and avoidance guidance in compact prompts", () => {
+    for (const profile of EXPERT_VOICE_PROFILES) {
+      const profileExpert = getExpert(profile.slug);
+
+      if (!profileExpert) {
+        throw new Error(`Expected ${profile.slug} profile to exist`);
+      }
+
+      const messages = buildModelMessages(
+        makeRequest({ expertSlug: profile.slug }),
+        profileExpert,
+        { forceCompactPersona: true }
+      );
+      const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+      for (const field of [
+        profile.deepeningStyle,
+        profile.wordingTendencies,
+        profile.avoidTemplates
+      ]) {
+        for (const guidance of field) {
+          expect(persona?.content).toContain(guidance);
+        }
+      }
+    }
   });
 
   it("delimits current user content as data rather than instructions", () => {
