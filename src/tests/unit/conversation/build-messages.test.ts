@@ -127,6 +127,49 @@ describe("buildModelMessages", () => {
     for (const question of profile.likelyQuestions) {
       expect(persona?.content).not.toContain(question);
     }
+    for (const wording of profile.wordingTendencies) {
+      expect(persona?.content).not.toContain(wording);
+    }
+    expect(persona?.content).toContain("措辞倾向只用于内部把握语气和用词习惯");
+  });
+
+  it("renders all voice and attention guidance for every expert during deep exploration", () => {
+    const history = Array.from({ length: 4 }, (_, index) => ({
+      role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
+      content: `deep-history-${index}`
+    }));
+
+    for (const profile of EXPERT_VOICE_PROFILES) {
+      const profileExpert = getExpert(profile.slug);
+
+      if (!profileExpert) {
+        throw new Error(`Expected ${profile.slug} profile to exist`);
+      }
+
+      const messages = buildModelMessages(
+        makeRequest({
+          expertSlug: profile.slug,
+          input: "I want to understand this pattern more deeply.",
+          history
+        }),
+        profileExpert
+      );
+      const persona = messages.find((message) => message.content.includes("Persona identity"));
+
+      for (const field of [
+        profile.openingStyle,
+        profile.deepeningStyle,
+        profile.wordingTendencies,
+        profile.avoidTemplates,
+        profile.attendsTo,
+        profile.languageStyle,
+        profile.likelyQuestions
+      ]) {
+        for (const guidance of field) {
+          expect(persona?.content).toContain(guidance);
+        }
+      }
+    }
   });
 
   it("uses a Chinese master-voice prompt that hides theory and forbids AI framing", () => {
@@ -293,14 +336,16 @@ describe("buildModelMessages", () => {
     expect(historyText).toContain("history-13");
   });
 
-  it("compresses older history and uses compact persona instructions after the first turn", () => {
+  it("compresses older history and uses compact persona instructions when forced", () => {
     const history = Array.from({ length: 24 }, (_, index) => ({
       role: index % 2 === 0 ? ("user" as const) : ("assistant" as const),
       content: `history-${String(index).padStart(2, "0")}`
     }));
 
     const firstTurnMessages = buildModelMessages(makeRequest({ history: [] }), expert);
-    const laterTurnMessages = buildModelMessages(makeRequest({ history }), expert);
+    const laterTurnMessages = buildModelMessages(makeRequest({ history }), expert, {
+      forceCompactPersona: true
+    });
     const laterTurnText = laterTurnMessages.map((message) => message.content).join("\n");
     const firstPersona = firstTurnMessages.find((message) =>
       message.content.includes("Persona identity")
@@ -332,15 +377,15 @@ describe("buildModelMessages", () => {
       );
       const persona = messages.find((message) => message.content.includes("Persona identity"));
 
-      for (const field of [
-        profile.deepeningStyle,
-        profile.wordingTendencies,
-        profile.avoidTemplates
-      ]) {
+      for (const field of [profile.deepeningStyle, profile.avoidTemplates]) {
         for (const guidance of field) {
           expect(persona?.content).toContain(guidance);
         }
       }
+      for (const wording of profile.wordingTendencies) {
+        expect(persona?.content).not.toContain(wording);
+      }
+      expect(persona?.content).toContain("措辞倾向只用于内部把握语气和用词习惯");
     }
   });
 

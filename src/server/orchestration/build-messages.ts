@@ -3,7 +3,7 @@ import { compressHistoryContext } from "@/domain/conversation/summarize";
 import type { ChatMessage, ConversationRequest } from "@/domain/conversation/types";
 import { getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
 
-import { renderConversationEngineGuidance } from "./conversation-engine";
+import { getConversationStage, renderConversationEngineGuidance } from "./conversation-engine";
 import {
   renderCompactPersonaSystemPrompt,
   renderPersonaSystemPrompt
@@ -39,6 +39,8 @@ export function buildModelMessages(
     throw new Error(`Missing voice profile for expert: ${expert.slug}`);
   }
 
+  const conversationStage = getConversationStage(request);
+
   const messages: ModelMessage[] = [
     {
       role: "system",
@@ -56,9 +58,15 @@ export function buildModelMessages(
     {
       role: "system",
       content:
-        options.forceCompactPersona || request.history.length > 0
+        options.forceCompactPersona ||
+        (request.history.length > 0 && conversationStage !== "deep-exploration")
           ? renderCompactPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
-          : renderPersonaSystemPrompt({ expert, voiceProfile, mode: request.mode })
+          : renderPersonaSystemPrompt({
+              expert,
+              voiceProfile,
+              mode: request.mode,
+              stage: conversationStage
+            })
     }
   ];
 

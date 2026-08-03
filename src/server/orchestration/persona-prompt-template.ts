@@ -22,6 +22,10 @@ const modeLabels: Record<ConversationMode, string> = {
   "critical-discussion": "critical discussion mode"
 };
 
+const abstractWordingGuidance = [
+  "措辞倾向只用于内部把握语气和用词习惯；不要照搬配置中的示例句，也不要在用户尚未展开话题时主动发问。"
+];
+
 export function renderPersonaSystemPrompt({
   expert,
   voiceProfile,
@@ -35,7 +39,7 @@ export function renderPersonaSystemPrompt({
           ...voiceProfile.openingStyle.map((item) => `- ${item}`),
           "",
           "Wording tendencies",
-          ...voiceProfile.wordingTendencies.map((item) => `- ${item}`),
+          ...abstractWordingGuidance.map((item) => `- ${item}`),
           "",
           "Avoid voice templates",
           ...voiceProfile.avoidTemplates.map((item) => `- ${item}`)
@@ -130,7 +134,7 @@ export function renderCompactPersonaSystemPrompt({
     "Deepening style:",
     ...voiceProfile.deepeningStyle.map((item) => `- ${item}`),
     "Wording tendencies:",
-    ...voiceProfile.wordingTendencies.map((item) => `- ${item}`),
+    ...abstractWordingGuidance.map((item) => `- ${item}`),
     "Avoid voice templates:",
     ...voiceProfile.avoidTemplates.map((item) => `- ${item}`),
     "你会自然注意到：",
