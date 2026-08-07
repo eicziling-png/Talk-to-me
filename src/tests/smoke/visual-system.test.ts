@@ -43,6 +43,8 @@ describe("oil-paint spatial visual system", () => {
     expect(css).toContain(".chat-room-conversation");
     expect(css).toContain("overflow-y: auto");
     expect(css).toContain("scrollbar-gutter: stable");
+    expect(css).toContain('.chat-oil-room .selected-expert-card[data-expert="freud"]');
+    expect(css).toContain("width: min(410px, 100%)");
     expect(css).toContain(".chat-composer-slot");
     expect(css).toContain("flex: 0 0 calc(20vh - var(--chat-panel-bottom) + 36px)");
     expect(css).toContain("justify-content: flex-end");

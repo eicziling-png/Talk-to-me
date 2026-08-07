@@ -10,6 +10,13 @@ const expert = {
   era: "1896-1971"
 };
 
+const freudExpert = {
+  slug: "freud" as const,
+  nameEn: "Sigmund Freud",
+  nameZh: "西格蒙德·弗洛伊德",
+  era: "1856-1939"
+};
+
 function renderWorkspace() {
   return render(<ChatWorkspace expert={expert} mode="self-reflection" />);
 }
@@ -69,6 +76,12 @@ describe("ChatWorkspace", () => {
     expect(screen.queryByText(/self-reflection/)).not.toBeInTheDocument();
     expect(screen.queryByText(/theory-classroom/)).not.toBeInTheDocument();
     expect(screen.queryByText(/critical-discussion/)).not.toBeInTheDocument();
+  });
+
+  it("marks Freud's header card for its local width override", () => {
+    const { container } = render(<ChatWorkspace expert={freudExpert} mode="self-reflection" />);
+
+    expect(container.querySelector('.selected-expert-card[data-expert="freud"]')).toBeInTheDocument();
   });
 
   it("uses an oil-paint conversation-room shell instead of a messenger clone", () => {

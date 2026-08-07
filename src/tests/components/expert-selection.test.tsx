@@ -3,74 +3,66 @@ import { describe, expect, it } from "vitest";
 
 import ChatPage from "@/app/chat/[slug]/page";
 import Home from "@/app/page";
-import { EXPERT_DISPLAY_COPY, FIGMA_HOME_ORDER } from "@/components/expert/display-copy";
-import { EXPERTS } from "@/domain/experts/registry";
-
-function formatEra(era: string): string {
-  return era.replace("-", "–");
-}
 
 describe("home expert browsing", () => {
-  it("renders all expert entrances directly on the home page", () => {
+  it("renders all expert entrances directly on the Figma homepage", () => {
     render(<Home />);
 
-    const cards = screen.getAllByRole("article");
+    const navigation = screen.getByRole("navigation", { name: "选择一位历史心理学家" });
+    const links = within(navigation).getAllByRole("link");
 
-    expect(cards).toHaveLength(7);
+    expect(links).toHaveLength(7);
     expect(screen.getByRole("heading", { name: "Talk to me" })).toBeInTheDocument();
     expect(screen.getByText("对话过去的声音，靠近此刻的自己")).toBeInTheDocument();
-    expect(screen.queryByText("历史心理学家对话")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "选择专家" })).not.toBeInTheDocument();
-
-    for (const expert of EXPERTS) {
-      const era = formatEra(expert.era);
-      const card = screen.getByRole("article", { name: `${expert.nameZh}，${era}` });
-      const link = within(card).getByRole("link", { name: `开始与${expert.nameZh}对话` });
-
-      expect(within(card).getByText(`${expert.nameZh} · ${era}`)).toBeInTheDocument();
-      expect(within(card).getByText(EXPERT_DISPLAY_COPY[expert.slug].poeticLine)).toBeInTheDocument();
-      expect(link).toHaveAttribute("href", `/chat/${expert.slug}`);
-    }
+    expect(screen.getByRole("main")).toHaveClass("figma-homepage");
+    expect(screen.getByRole("main").querySelector(".figma-homepage__art")).toHaveAttribute(
+      "src",
+      "/figma/talk-to-me-homepage.png"
+    );
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });
 
   it("uses the final Figma visual order for the room entrances", () => {
     render(<Home />);
 
-    expect(screen.getAllByRole("article").map((card) => card.getAttribute("data-expert"))).toEqual(FIGMA_HOME_ORDER);
+    const navigation = screen.getByRole("navigation", { name: "选择一位历史心理学家" });
+    expect(within(navigation).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
+      "/chat/freud",
+      "/chat/klein",
+      "/chat/winnicott",
+      "/chat/bion",
+      "/chat/lacan",
+      "/chat/kohut",
+      "/chat/yalom"
+    ]);
   });
 
-  it("uses a spatial oil-room layout and hides school labels from cards", () => {
+  it("keeps the homepage focused on the visual entrance rather than theory labels", () => {
     render(<Home />);
 
-    expect(screen.getByLabelText("选择一位历史心理学家")).toHaveClass("home-expert-list");
-    expect(screen.getByRole("main")).toHaveClass("oil-room");
-    expect(screen.getByRole("main").querySelector(".oil-plane-blue")).toBeInTheDocument();
-    expect(screen.getByRole("main").querySelector(".oil-plane-warm")).toBeInTheDocument();
-    expect(screen.getByRole("main").querySelector(".oil-plane-plant")).not.toBeInTheDocument();
-    expect(screen.queryByText("经典精神分析")).not.toBeInTheDocument();
-    expect(screen.queryByText("拉康派精神分析")).not.toBeInTheDocument();
-    expect(screen.queryByText("英国客体关系")).not.toBeInTheDocument();
-  });
-
-  it("keeps Lacan as the Jung replacement on home cards", () => {
-    render(<Home />);
-
-    expect(screen.queryByRole("article", { name: /Carl Gustav Jung/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("article", { name: "雅克·拉康，1901–1981" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "选择一位历史心理学家" })).toHaveClass("home-expert-list");
+    expect(screen.getByRole("main").querySelector(".figma-homepage__art")).toBeInTheDocument();
     expect(screen.queryByText(/collective unconscious/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/archetype/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps Lacan as the Jung replacement on the homepage", () => {
+    render(<Home />);
+
+    expect(screen.queryByText(/Carl Gustav Jung/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "开始与拉康对话" })).toHaveAttribute("href", "/chat/lacan");
   });
 });
 
 describe("direct chat route", () => {
-  it("defaults direct chat links to the regular conversation mode", async () => {
+  it("keeps direct expert links on the regular conversation route", async () => {
     const view = await ChatPage({
       params: Promise.resolve({ slug: "yalom" }),
       searchParams: Promise.resolve({})
     });
     render(view);
 
-    expect(screen.getByText(/欧文·亚隆 · 1931–/)).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /请选择有效的对话方式/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("main")).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 });

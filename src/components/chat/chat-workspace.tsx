@@ -175,7 +175,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
       <div className="chat-room-panel">
         <div className="chat-room-header">
           <header className="chat-header">
-            <div className="selected-expert-card">
+            <div className="selected-expert-card" data-expert={expert.slug}>
               <p id="chat-title">
                 {expert.nameZh} · {era}
               </p>
