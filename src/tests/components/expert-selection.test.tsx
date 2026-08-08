@@ -12,7 +12,7 @@ describe("home expert browsing", () => {
     const links = within(navigation).getAllByRole("link");
 
     expect(links).toHaveLength(7);
-    expect(screen.getByRole("heading", { name: "Talk to me" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "TALK TO ME" })).toBeInTheDocument();
     expect(screen.getByText("对话过去的声音，靠近此刻的自己")).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveClass("figma-homepage");
     expect(screen.getByRole("main").querySelector(".figma-homepage__art")).toHaveAttribute(

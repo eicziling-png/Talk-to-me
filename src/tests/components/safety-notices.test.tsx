@@ -25,7 +25,8 @@ describe("safety and privacy surfaces", () => {
   it("shows compact safety copy on the homepage only as a low-key footer note", () => {
     render(<Home />);
 
-    expect(screen.getByText("本工具为基于历史人物思想风格的角色模拟，不提供诊断、治疗或临床服务。")).toBeInTheDocument();
+    expect(screen.getByText(/本工具为基于历史人物思想风格的角色模拟/)).toBeInTheDocument();
+    expect(screen.getByText(/不提供诊断、治疗或临床服务/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "安全与隐私说明" })).toHaveAttribute("href", "/about");
     expect(screen.queryByText(/教育性角色模拟/)).not.toBeInTheDocument();
   });

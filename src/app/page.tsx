@@ -57,7 +57,7 @@ export default function Home() {
       />
 
       <section className="figma-homepage__intro">
-        <h1 id="home-title">Talk to me</h1>
+        <h1 id="home-title">TALK TO ME</h1>
         <p>对话过去的声音，靠近此刻的自己</p>
       </section>
 
@@ -75,7 +75,11 @@ export default function Home() {
       </nav>
 
       <div className="figma-homepage__safety home-safety-note">
-        <p>本工具为基于历史人物思想风格的角色模拟，不提供诊断、治疗或临床服务。</p>
+        <p>
+          本工具为基于历史人物思想风格的角色模拟。
+          <br />
+          不提供诊断、治疗或临床服务。
+        </p>
         <Link href="/about">安全与隐私说明</Link>
       </div>
     </main>
