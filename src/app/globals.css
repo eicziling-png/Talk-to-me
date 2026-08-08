@@ -53,7 +53,7 @@
 .figma-homepage__intro {
   position: absolute;
   top: 9.1vh;
-  left: 7.15vw;
+  left: 65.55%;
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -84,7 +84,7 @@
 
 .figma-homepage__experts {
   position: absolute;
-  top: 42.55%;
+  top: 36.175%;
   left: 65.55%;
   z-index: 1;
   display: grid;
@@ -153,11 +153,11 @@
 @media (max-width: 900px) {
   .figma-homepage__intro {
     top: 8vh;
-    left: 8vw;
+    left: 10vw;
   }
 
   .figma-homepage__experts {
-    top: 48%;
+    top: 44.5%;
     left: 10vw;
     width: 80vw;
     column-gap: 12vw;
@@ -185,7 +185,7 @@
   }
 
   .figma-homepage__experts {
-    top: 47%;
+    top: 43.5%;
     left: 8vw;
     width: 84vw;
     column-gap: 6vw;
@@ -213,7 +213,7 @@
    overriding the new Figma-only homepage positioning. */
 .figma-homepage .home-expert-list {
   position: absolute;
-  top: 42.55%;
+  top: 36.175%;
   right: auto;
   bottom: auto;
   left: 65.55%;
@@ -239,7 +239,7 @@
 
 @media (max-width: 900px) {
   .figma-homepage .home-expert-list {
-    top: 48%;
+    top: 44.5%;
     right: auto;
     left: 10vw;
     width: 80vw;
@@ -257,7 +257,7 @@
 
 @media (max-width: 520px) {
   .figma-homepage .home-expert-list {
-    top: 47%;
+    top: 43.5%;
     right: auto;
     left: 8vw;
     width: 84vw;
@@ -266,6 +266,10 @@
 }
 
 @media (min-width: 901px) and (max-height: 800px) {
+  .figma-homepage .home-expert-list {
+    top: 38.05%;
+  }
+
   .figma-homepage .figma-homepage__expert-column {
     gap: clamp(2rem, 9vh, 5rem);
   }
@@ -1278,7 +1282,7 @@ button {
 /* Final cascade guard for the new static Figma homepage. */
 .figma-homepage .home-expert-list {
   position: absolute;
-  top: 42.55%;
+  top: 36.175%;
   right: auto;
   bottom: auto;
   left: 65.55%;
@@ -1299,7 +1303,7 @@ button {
 
 @media (max-width: 900px) {
   .figma-homepage .home-expert-list {
-    top: 48%;
+    top: 44.5%;
     right: auto;
     left: 10vw;
     width: 80vw;
@@ -1316,9 +1320,15 @@ button {
 
 @media (max-width: 520px) {
   .figma-homepage .home-expert-list {
-    top: 47%;
+    top: 43.5%;
     right: auto;
     left: 8vw;
     width: 84vw;
+  }
+}
+
+@media (min-width: 901px) and (max-height: 800px) {
+  .figma-homepage .home-expert-list {
+    top: 38.05%;
   }
 }
