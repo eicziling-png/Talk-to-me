@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
 import { EXPERT_DISPLAY_COPY } from "@/components/expert/display-copy";
@@ -175,18 +176,29 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
       <div className="chat-room-panel">
         <div className="chat-room-header">
           <header className="chat-header">
+            <Link className="chat-back-button" href="/" aria-label="返回首页">
+              <img alt="" aria-hidden="true" src="/figma/chat-chevron-left.svg" />
+            </Link>
             <div className="selected-expert-card" data-expert={expert.slug}>
               <p id="chat-title">
-                {expert.nameZh} · {era}
+                {expert.nameZh} <span aria-hidden="true"> | </span> {display.poeticLine}
               </p>
-              <span>{display.poeticLine}</span>
+              <span className="sr-only">
+                {expert.nameZh} · {era}
+              </span>
             </div>
-            <div className="chat-header-actions" aria-label="会话操作">
-              <ExportButton session={session} />
-              <button onClick={clear} type="button">
-                清空
-              </button>
-            </div>
+            <div className="chat-header-spacer" aria-hidden="true" />
+            <details className="chat-menu">
+              <summary aria-label="会话菜单">
+                <img alt="" aria-hidden="true" src="/figma/chat-more-horizontal.svg" />
+              </summary>
+              <div className="chat-menu-content">
+                <ExportButton session={session} />
+                <button onClick={clear} type="button">
+                  清空
+                </button>
+              </div>
+            </details>
           </header>
           <SessionNotice />
         </div>
