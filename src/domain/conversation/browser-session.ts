@@ -7,6 +7,7 @@ export type BrowserMessage = {
   role: "user" | "assistant";
   content: string;
   complete?: boolean;
+  createdAt?: number;
 };
 
 export type BrowserSessionStatus = "idle" | "streaming" | "failed" | "interrupted";

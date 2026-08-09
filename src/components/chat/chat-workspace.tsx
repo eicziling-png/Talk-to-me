@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
 import { EXPERT_DISPLAY_COPY } from "@/components/expert/display-copy";
-import { PaintingRoomLayout } from "@/components/layout/painting-room-layout";
 import {
   createBrowserSession,
   type BrowserMessage,
@@ -166,7 +165,17 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
   }
 
   return (
-    <PaintingRoomLayout aria-labelledby="chat-title" className="chat-workspace chat-oil-room" variant="chat">
+    <div aria-labelledby="chat-title" className="chat-workspace chat-oil-room oil-room figma-chatpage" role="region">
+      <img
+        alt=""
+        aria-hidden="true"
+        className="figma-chatpage__art"
+        src="/figma/talk-to-me-homepage.png"
+      />
+      <div aria-hidden="true" className="chat-legacy-layout-markers">
+        <span className="oil-plane-blue" />
+        <span className="oil-plane-warm" />
+      </div>
       <section className="oil-brand chat-brand" aria-label="Talk to me">
         <h2>Talk to me</h2>
         <span className="brand-rule" aria-hidden="true" />
@@ -225,7 +234,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
           />
         </div>
       </div>
-    </PaintingRoomLayout>
+    </div>
   );
 }
 
@@ -234,7 +243,8 @@ function makeMessage(role: BrowserMessage["role"], content: string, complete?: b
     id: `${role}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     role,
     content,
-    complete
+    complete,
+    createdAt: Date.now()
   };
 }
 

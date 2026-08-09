@@ -55,11 +55,23 @@ export function Transcript({ expert, messages }: TranscriptProps) {
                 <p className="incomplete-marker">消息中断，可点击重试继续。</p>
               ) : null}
             </div>
+            <time className="message-time" dateTime={message.createdAt ? new Date(message.createdAt).toISOString() : undefined}>
+              {formatMessageTime(message.createdAt)}
+            </time>
           </div>
         </article>
       ))}
     </section>
   );
+}
+
+function formatMessageTime(timestamp?: number): string {
+  const date = timestamp ? new Date(timestamp) : new Date();
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(date);
 }
 
 function isSafetyReply(content: string): boolean {
