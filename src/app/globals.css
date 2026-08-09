@@ -1655,6 +1655,7 @@ button {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  --chat-message-lane-width: min(680px, 78%);
   padding: 0 50px;
   scrollbar-color: rgba(160, 168, 180, 0.48) transparent;
   scrollbar-gutter: stable;
@@ -1704,11 +1705,13 @@ button {
 }
 
 .figma-chatpage .chat-message.assistant .message-stack {
-  width: min(499px, 100%);
+  width: var(--chat-message-lane-width);
+  margin-right: auto;
 }
 
 .figma-chatpage .chat-message.user .message-stack {
-  width: min(520px, 100%);
+  width: var(--chat-message-lane-width);
+  margin-left: auto;
 }
 
 .figma-chatpage .message-bubble {
