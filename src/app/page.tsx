@@ -10,7 +10,7 @@ const FIGMA_EXPERT_NAMES: Record<ExpertSlug, string> = {
   klein: "克莱因",
   kohut: "科胡特",
   winnicott: "温尼科特",
-  yalom: "欧文亚隆",
+  yalom: "欧文·亚隆",
   bion: "比昂"
 };
 
