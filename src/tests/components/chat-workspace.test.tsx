@@ -69,6 +69,30 @@ describe("ChatWorkspace", () => {
     expect(screen.getByRole("button", { name: /送出/i })).toBeDisabled();
   });
 
+  it("grows the composer textarea with wrapped content and caps overflow", async () => {
+    renderWorkspace();
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    let measuredHeight = 96;
+    Object.defineProperty(textarea, "scrollHeight", {
+      configurable: true,
+      get: () => measuredHeight
+    });
+
+    fireEvent.change(textarea, { target: { value: "一段会换行的较长消息" } });
+    await waitFor(() => {
+      expect(textarea.style.height).toBe("96px");
+      expect(textarea.style.overflowY).toBe("hidden");
+    });
+
+    measuredHeight = 180;
+    fireEvent.change(textarea, { target: { value: "更长的消息" } });
+    await waitFor(() => {
+      expect(textarea.style.height).toBe("110px");
+      expect(textarea.style.overflowY).toBe("auto");
+    });
+  });
+
   it("does not expose raw internal mode labels in the chat header", () => {
     renderWorkspace();
 

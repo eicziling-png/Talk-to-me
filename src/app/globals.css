@@ -1950,3 +1950,18 @@ button {
     top: 32.34%;
   }
 }
+
+/* Let the composer grow with the textarea while preserving its bottom inset. */
+.figma-chatpage .chat-composer-slot {
+  flex: 0 0 auto;
+}
+
+.figma-chatpage .chat-composer {
+  height: auto;
+  min-height: 52px;
+}
+
+.figma-chatpage .chat-composer textarea {
+  max-height: 110px;
+  overflow-y: hidden;
+}

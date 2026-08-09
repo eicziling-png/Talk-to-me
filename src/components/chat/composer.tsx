@@ -1,3 +1,5 @@
+import { useCallback, useLayoutEffect, useRef } from "react";
+
 type ComposerProps = {
   value: string;
   disabled?: boolean;
@@ -15,6 +17,26 @@ export function Composer({
   onStop,
   showStop
 }: ComposerProps) {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const resizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    const minHeight = 22;
+    const maxHeight = 110;
+    textarea.style.height = "auto";
+    const contentHeight = textarea.scrollHeight || minHeight;
+    const nextHeight = Math.min(Math.max(contentHeight, minHeight), maxHeight);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = contentHeight > maxHeight ? "auto" : "hidden";
+  }, []);
+
+  useLayoutEffect(() => {
+    resizeTextarea();
+  }, [resizeTextarea, value]);
+
   return (
     <form
       className="chat-composer"
@@ -31,6 +53,7 @@ export function Composer({
         disabled={disabled}
         id="chat-message"
         onChange={(event) => onChange(event.target.value)}
+        ref={textareaRef}
         rows={1}
         value={value}
       />
