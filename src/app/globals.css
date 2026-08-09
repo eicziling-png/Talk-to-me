@@ -1919,6 +1919,33 @@ button {
   transform: translateX(-15%);
 }
 
+/* Restore the compact typography scale used by the legacy homepage. */
+.figma-homepage .figma-homepage__intro h1 {
+  font-size: clamp(3rem, 4vw, 3.5rem);
+}
+
+.figma-homepage .figma-homepage__intro p {
+  font-size: clamp(1rem, 1.667vw, 1.5rem);
+}
+
+.figma-homepage .figma-homepage__expert {
+  gap: 0.75rem;
+  font-size: clamp(1rem, 1.667vw, 1.5rem);
+}
+
+.figma-homepage .figma-homepage__dot {
+  width: 0.65rem;
+  height: 0.6rem;
+}
+
+.figma-homepage .figma-homepage__expert-column {
+  gap: clamp(2rem, 10.5vh, 5.9rem);
+}
+
+.figma-homepage .home-expert-list {
+  top: 29.25%;
+}
+
 /* Chat header identity only: keep its size, color, and position unchanged. */
 .figma-chatpage .selected-expert-card p {
   font-weight: 800;
@@ -1926,31 +1953,49 @@ button {
 
 @media (max-width: 900px) {
   .figma-homepage .home-expert-list {
-    top: 37.825%;
+    top: 36.5%;
   }
 
   .figma-homepage .figma-homepage__intro p {
-    font-size: clamp(1.125rem, 4.75vw, 1.5rem);
+    font-size: clamp(1rem, 4.2vw, 1.3rem);
   }
 
   .figma-homepage .figma-homepage__expert {
-    font-size: clamp(1.085rem, 5.41vw, 1.4375rem);
+    font-size: clamp(0.95rem, 4.6vw, 1.25rem);
+  }
+
+  .figma-homepage .figma-homepage__expert-column {
+    gap: 6vh;
   }
 }
 
 @media (max-width: 520px) {
   .figma-homepage .figma-homepage__intro h1 {
-    font-size: clamp(2.475rem, 11.7vw, 3.7125rem);
+    font-size: clamp(2.5rem, 10vw, 3.25rem);
   }
 
   .figma-homepage .home-expert-list {
-    top: 36.975%;
+    top: 36.5%;
+  }
+
+  .figma-homepage .figma-homepage__intro p {
+    font-size: clamp(0.9rem, 3.8vw, 1.2rem);
+  }
+
+  .figma-homepage .figma-homepage__expert {
+    gap: 0.65rem;
+    font-size: clamp(0.9rem, 4.2vw, 1.15rem);
+  }
+
+  .figma-homepage .figma-homepage__dot {
+    width: 0.6rem;
+    height: 0.55rem;
   }
 }
 
 @media (min-width: 901px) and (max-height: 800px) {
   .figma-homepage .home-expert-list {
-    top: 32.34%;
+    top: 31%;
   }
 }
 
