@@ -156,6 +156,8 @@ describe("ChatWorkspace", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /送出/i }));
 
+    expect(await screen.findByText("对方输入中...")).toBeInTheDocument();
+
     stream.enqueue("First");
 
     await screen.findByText("First");

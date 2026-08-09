@@ -2,17 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
-import type { BrowserMessage } from "@/domain/conversation/browser-session";
+import type { BrowserMessage, BrowserSessionStatus } from "@/domain/conversation/browser-session";
 
 type TranscriptProps = {
   messages: BrowserMessage[];
+  status: BrowserSessionStatus;
   expert: {
     nameEn: string;
     nameZh: string;
   };
 };
 
-export function Transcript({ expert, messages }: TranscriptProps) {
+export function Transcript({ expert, messages, status }: TranscriptProps) {
   const transcriptRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -51,8 +52,11 @@ export function Transcript({ expert, messages }: TranscriptProps) {
             ) : null}
             <div className="message-bubble">
               <p>{message.content}</p>
-              {message.role === "assistant" && message.complete === false ? (
+              {message.role === "assistant" && message.complete === false && status !== "streaming" ? (
                 <p className="incomplete-marker">消息中断，可点击重试继续。</p>
+              ) : null}
+              {message.role === "assistant" && message.complete === false && status === "streaming" ? (
+                <p className="incomplete-marker">{"\u5bf9\u65b9\u8f93\u5165\u4e2d..."}</p>
               ) : null}
             </div>
             <time className="message-time" dateTime={message.createdAt ? new Date(message.createdAt).toISOString() : undefined}>

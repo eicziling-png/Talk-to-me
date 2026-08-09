@@ -213,7 +213,7 @@ export function ChatWorkspace({ expert, mode }: ChatWorkspaceProps) {
         </div>
 
         <div className="chat-room-conversation">
-          <Transcript expert={expert} messages={session.messages} />
+          <Transcript expert={expert} messages={session.messages} status={session.status} />
           {session.status === "failed" ? <p role="alert">发送失败，可以点重试。</p> : null}
           {session.status === "interrupted" ? <p role="alert">消息中断。</p> : null}
           <div className="retry-row">
