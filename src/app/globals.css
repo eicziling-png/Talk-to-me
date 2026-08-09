@@ -22,6 +22,7 @@
   --room-gutter: clamp(32px, 3vw, 54px);
   --serif: "Noto Serif SC", "Songti SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
   --sans: "Noto Sans SC", "Noto Sans HK", "Microsoft YaHei", Arial, sans-serif;
+  --cjk-serif: "KaiTi", "楷体", "STKaiti", "Noto Serif SC", "Songti SC", "Source Han Serif SC", Georgia, serif;
 }
 
 /* Figma 05 Sketch redesign — static homepage only. The artwork is the visual
@@ -1808,4 +1809,40 @@ button {
     padding-right: clamp(24px, 7vw, 50px);
     padding-left: clamp(24px, 7vw, 50px);
   }
+}
+
+/* Typography-only refinement: keep the English brand typeface intact while
+   giving Chinese copy a consistent, handwritten literary texture. */
+.figma-homepage__intro p,
+.figma-homepage__expert,
+.figma-homepage__safety {
+  font-family: var(--cjk-serif);
+}
+
+.figma-chatpage .selected-expert-card p,
+.figma-chatpage .session-notice,
+.figma-chatpage .message-bubble p,
+.figma-chatpage .chat-composer textarea,
+.figma-chatpage .chat-menu-content button,
+.figma-chatpage .composer-actions button[type="button"],
+.figma-chatpage [role="alert"],
+.figma-chatpage .retry-row button {
+  font-family: var(--cjk-serif);
+}
+
+.figma-chatpage .selected-expert-card p {
+  font-size: clamp(1.05rem, 1.35vw, 1.25rem);
+}
+
+.figma-chatpage .message-bubble p {
+  font-size: clamp(1.05rem, 1.35vw, 1.25rem);
+}
+
+.figma-chatpage .message-time {
+  font-family: var(--cjk-serif);
+  font-size: clamp(0.72rem, 0.78vw, 0.86rem);
+}
+
+.figma-chatpage .chat-composer textarea {
+  font-size: clamp(1.05rem, 1.35vw, 1.25rem);
 }
