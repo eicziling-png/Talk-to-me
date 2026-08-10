@@ -2155,3 +2155,125 @@ button {
     gap: clamp(20px, 6vw, 36px);
   }
 }
+
+/* Responsive chat guard: use the same reserved-artwork strategy as the
+   homepage so the conversation panel never shares a horizontal lane with
+   the watercolor image on narrow viewports. Desktop coordinates above stay
+   untouched. */
+@media (max-width: 1100px) {
+  .figma-chatpage {
+    display: grid;
+    grid-template-columns: minmax(0, 42%) minmax(0, 58%);
+    grid-template-rows: 1fr;
+    min-height: 100svh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .figma-chatpage__art {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    transform: none;
+    object-fit: cover;
+    object-position: center bottom;
+    z-index: 0;
+  }
+
+  .figma-chatpage .chat-room-panel {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    inset: auto;
+    width: auto;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    z-index: 1;
+  }
+
+  .figma-chatpage .chat-room-header {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .figma-chatpage .chat-header {
+    width: 100%;
+    height: auto;
+    min-height: 78px;
+    margin-top: clamp(24px, 6vh, 72px);
+    padding-right: clamp(16px, 3vw, 24px);
+    padding-left: clamp(16px, 3vw, 24px);
+  }
+
+  .figma-chatpage .selected-expert-card {
+    min-width: 0;
+  }
+
+  .figma-chatpage .selected-expert-card p {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .figma-chatpage .chat-room-conversation,
+  .figma-chatpage .chat-composer-slot,
+  .figma-chatpage .chat-composer {
+    min-width: 0;
+  }
+
+  .figma-chatpage .chat-room-conversation {
+    padding-right: clamp(18px, 4vw, 50px);
+    padding-left: clamp(18px, 4vw, 50px);
+  }
+
+  .figma-chatpage .chat-composer-slot {
+    padding-right: clamp(18px, 4vw, 50px);
+    padding-left: clamp(18px, 4vw, 50px);
+  }
+
+  .figma-chatpage .chat-composer textarea {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .figma-chatpage {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(240px, 42svh) minmax(0, 1fr);
+  }
+
+  .figma-chatpage__art {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .figma-chatpage .chat-room-panel {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    height: auto;
+    min-height: calc(100svh - 42svh);
+  }
+
+  .figma-chatpage .chat-header {
+    margin-top: 0;
+  }
+
+  .figma-chatpage .chat-room-conversation {
+    padding-right: clamp(16px, 6vw, 32px);
+    padding-left: clamp(16px, 6vw, 32px);
+  }
+
+  .figma-chatpage .chat-composer-slot {
+    padding-right: clamp(16px, 6vw, 32px);
+    padding-left: clamp(16px, 6vw, 32px);
+  }
+}
