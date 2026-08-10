@@ -343,11 +343,11 @@ Steps:
 
 Steps:
 
-- [ ] 使用 Playwright route interception 为 `/api/chat/party` 提供确定性 plan/expert events，避免 E2E 依赖真实模型 provider。
-- [ ] 覆盖首页 party link → `/chat/party`、固定 self-reflection UI、有限 plan、多个 expert lanes、顺序展示、停止、清空和刷新不恢复。
-- [ ] 覆盖 mobile party layout 中 composer、expert names 和 message lanes 不溢出。
-- [ ] 运行 focused party E2E；确认新测试只依赖 party route，不改变旧 E2E。
-- [ ] 单独运行 `pnpm test`、`pnpm lint` 和 `pnpm build`，记录既有 E2E 断言与本次新增 party E2E 的区别。
+- [x] 使用 Playwright route interception 为 `/api/chat/party` 提供确定性 plan/expert events，避免 E2E 依赖真实模型 provider。
+- [x] 覆盖首页 party link → `/chat/party`、固定 self-reflection UI、有限 plan、多个 expert lanes、顺序展示、停止、清空和刷新不恢复。
+- [x] 覆盖 mobile party layout 中 composer、expert names 和 message lanes 不溢出。
+- [x] 运行 focused party E2E；确认新测试只依赖 party route，不改变旧 E2E。
+- [x] 单独运行 `pnpm test`、`pnpm lint` 和 `pnpm build`，记录既有 E2E 断言与本次新增 party E2E 的区别。
 
 ### Task 7: Phase 1 review gate
 
