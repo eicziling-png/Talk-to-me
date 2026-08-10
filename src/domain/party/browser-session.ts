@@ -16,13 +16,24 @@ export type PartySessionAction =
   | { type: "interrupted" }
   | { type: "clear" };
 
-export function createPartySession(): PartySession {
+export function createPartySession(sessionSeed = createPartySessionSeed()): PartySession {
   return {
     mode: "self-reflection",
     messages: [],
     status: "idle",
-    failedInput: null
+    failedInput: null,
+    sessionSeed
   };
+}
+
+function createPartySessionSeed(): number {
+  if (typeof globalThis.crypto?.getRandomValues === "function") {
+    const values = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(values);
+    return values[0] ?? 0;
+  }
+
+  return Math.floor(Math.random() * 4_294_967_296);
 }
 
 export function partySessionReducer(

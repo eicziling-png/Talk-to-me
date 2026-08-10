@@ -7,11 +7,12 @@ import {
 
 describe("party browser session", () => {
   it("starts as an empty ephemeral self-reflection session", () => {
-    expect(createPartySession()).toEqual({
+    expect(createPartySession(123)).toEqual({
       mode: "self-reflection",
       messages: [],
       status: "idle",
-      failedInput: null
+      failedInput: null,
+      sessionSeed: 123
     });
   });
 
@@ -46,7 +47,12 @@ describe("party browser session", () => {
     const cleared = partySessionReducer(interrupted, { type: "clear" });
 
     expect(interrupted.status).toBe("interrupted");
-    expect(cleared).toEqual(createPartySession());
+    expect(cleared.mode).toBe("self-reflection");
+    expect(cleared.messages).toEqual([]);
+    expect(cleared.status).toBe("idle");
+    expect(cleared.failedInput).toBeNull();
+    expect(cleared.sessionSeed).toEqual(expect.any(Number));
+    expect(cleared.sessionSeed).not.toBe(initial.sessionSeed);
   });
 
   it("stores the failed input without persisting anything outside memory", () => {

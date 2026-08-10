@@ -171,6 +171,51 @@ describe("conversation arrangement planner", () => {
     expect(plan.participants.length).toBeGreaterThanOrEqual(2);
     expect(plan.participants.map((participant) => participant.expertSlug)).toContain("winnicott");
     expect(new Set(plan.participants.map((participant) => participant.expertSlug)).size).toBeGreaterThan(1);
+    expect(plan.messageLimit).toBeGreaterThanOrEqual(plan.participants.length);
+  });
+
+  it("keeps the final plan contract valid after depth expansion", async () => {
+    const plan = await planConversationArrangement(
+      {
+        ...request,
+        input: "\u6211\u6700\u8fd1\u5f88\u96be\u8fc7\uff0c\u56e0\u4e3a\u540c\u4e00\u79cd\u5173\u7cfb\u6a21\u5f0f\u4e00\u76f4\u53cd\u590d\uff0c\u6211\u4e0d\u77e5\u9053\u8be5\u600e\u4e48\u529e\u3002",
+        history: [
+          { role: "user", content: "I have been feeling lonely" },
+          { role: "expert", expertSlug: "winnicott", content: "I am here with you." },
+          { role: "user", content: "I keep disappearing in relationships" },
+          { role: "expert", expertSlug: "freud", content: "Let us notice what repeats." }
+        ],
+        sessionSeed: 7
+      },
+      {
+        modelProvider: providerFromJson({
+          participants: [{ expertSlug: "winnicott", focus: "holding", order: 0 }],
+          messageLimit: 1
+        })
+      }
+    );
+
+    expect(plan.participants.length).toBeGreaterThan(1);
+    expect(plan.messageLimit).toBeGreaterThanOrEqual(plan.participants.length);
+    expect(plan.participants.length).toBeLessThanOrEqual(PHASE1_MAX_PARTICIPANTS);
+  });
+
+  it("varies shallow openings by session seed while keeping a seed stable", async () => {
+    const makePlan = (sessionSeed: number) =>
+      planConversationArrangement(
+        { ...request, input: "hi", sessionSeed },
+        {
+          modelProvider: providerFromJson({
+            participants: [{ expertSlug: "winnicott", focus: "welcome", order: 0 }],
+            messageLimit: 1
+          })
+        }
+      );
+
+    const [first, repeat, second] = await Promise.all([makePlan(1), makePlan(1), makePlan(2)]);
+
+    expect(repeat.participants[0]?.expertSlug).toBe(first.participants[0]?.expertSlug);
+    expect(second.participants[0]?.expertSlug).not.toBe(first.participants[0]?.expertSlug);
   });
 
   it("does not keep alternating the same two sole responders across deep turns", async () => {

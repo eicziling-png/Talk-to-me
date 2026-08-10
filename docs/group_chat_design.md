@@ -137,6 +137,23 @@ planner 的输出应表达“本轮房间如何自然展开”，而不是只返
 
 因此，planner 应规划参与方式、参与强度、互补 focus 和展示顺序，并为未来的专家互动保留扩展空间。Phase 1 只执行首轮并行生成，最多一次专家回应，不实现专家之间的实际回应；“讨论”在这一阶段意味着多个独立声音共享用户上下文，而不是专家互相辩论。
 
+### 4.8 多轮稳定性与参与多样性修复原则
+
+Phase 1 人工测试暴露了两个需要优先修复的 orchestration 问题：
+
+1. **动态扩展必须保持 plan contract 完整。** 当前运行时会在深层对话中把 planner 返回的 1 位候选补充为 2–3 位，但如果只扩展 `participants` 而不同时扩展 `messageLimit`，服务端二次校验会得到 `messageLimit < participants.length` 的非法计划，API 将返回 502，前端只显示“发送失败”。任何参与人数扩展、轮换或 fallback 都必须在同一个原子策略中同步修正人数上限，并在进入 service 前重新校验最终 plan。
+2. **正常的多轮编排失败不能伪装成前端发送失败。** `planner_invalid_output`、provider failure、timeout 和 plan invariant failure 必须具有可区分的内部错误类型；前端不展示 planner 细节，但服务端 telemetry 必须能区分请求校验、编排校验和专家生成失败。
+
+对当前第三轮问题的排查结论是：浏览器 session 会从已有消息重建 history，第三轮测试中的请求体远低于 body、history 和单条消息限制；不存在 `activePlan` 状态丢失导致 history 被清空的证据。问题发生在服务端最终 plan 的 invariant 不一致，而不是 history 保存或 SSE 消息数量上限。
+
+首轮和 fallback 也不得依赖专家 registry 的固定顺序。当前 `winnicott` fallback 加上按出生年份排序的第一个替代专家，会稳定产生 Winnicott → Freud。新的参与策略应：
+
+- 为每个新会话生成仅供服务端编排使用的 session seed；seed 不进入 UI、消息正文或公开 planner 事件。
+- 在相关性和近期覆盖基础上，对同分候选使用 seed-based tie-break，使不同新会话的开场声音自然变化，而不是纯随机或固定 registry 顺序。
+- fallback 也必须使用同一套开场多样性和近期覆盖 policy；不可永远回到 Winnicott，也不可在 fallback 时固定选择 Freud 作为第二人。
+- 首轮保留轻盈的一人回应可能，但在同一会话的后续轮次中，不得让同一专家长期成为唯一声音；深入表达时按互补视角增加参与者。
+- 测试必须验证不同 session seed 能产生不同的合法开场组合，同时同一 seed 可复现，便于排查和回放。
+
 ## 5. 专家回应与顺序
 
 ### 5.1 首轮顺序

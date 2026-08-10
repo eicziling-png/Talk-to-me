@@ -51,6 +51,17 @@ describe("party schemas", () => {
     ).toThrow();
   });
 
+  it("accepts an optional internal session seed without exposing planner details", () => {
+    const request = PartyConversationRequestSchema.parse({
+      mode: "self-reflection",
+      input: "I feel lonely",
+      history: [],
+      sessionSeed: 123
+    });
+
+    expect(request.sessionSeed).toBe(123);
+  });
+
   it("keeps planner stream events opaque to the browser", () => {
     expect(PartyStreamEventSchema.parse({ type: "plan" })).toEqual({ type: "plan" });
 

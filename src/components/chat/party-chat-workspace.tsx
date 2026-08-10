@@ -63,7 +63,8 @@ export function PartyChatWorkspace() {
       const requestBody: PartyConversationRequest = {
         mode: "self-reflection",
         input: content,
-        history
+        history,
+        sessionSeed: session.sessionSeed
       };
       const parsedBody = PartyConversationRequestSchema.parse(requestBody);
       const response = await fetch("/api/chat/party", {

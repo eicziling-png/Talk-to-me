@@ -410,6 +410,45 @@ Steps:
 - `build-expert-messages` 增加共同房间身份规则和禁止“其他人不在/正在沉思/为什么没回应”等泄漏调度的 prompt 约束。
 - `PartyTranscript` / party workspace 继续只展示实际消息，移除任何人数、计划或未参与状态。
 
+### Post-Phase-1 diagnosis: third-turn 502 and deterministic opening voices
+
+这项诊断来自线上 Worker logs、当前 commit `482d12e` 的代码路径和现有 contract。当前只记录原因与修复计划，不在本次更新中修改实现。
+
+#### Issue 1 root cause: dynamic plan invariant failure
+
+- 第三轮线上失败是 `/api/chat/party` 返回 502；日志中的请求体约为 475–650 bytes，未触发 32KB request body、80 条 history 或单条 4000 字符限制。
+- `PartyChatWorkspace` 会从内存 `session.messages` 重建完整 `PartyMessage[]` history；当前类型没有 `activePlan` 字段，因此不是 active plan 丢失导致 history 清空。AbortController 也在每轮 finally 中释放并重新创建。
+- 深度参与 policy 会把 planner 的单专家候选补充为 2–3 位，但 `applyParticipantPolicy` 只改变 `participants`，没有同步把 `messageLimit` 调整到至少等于最终参与人数。
+- `runPartyChat` 随后执行 `PartyPlanSchema.parse(plan)`；`messageLimit < participants.length` 触发 ZodError，API route 将其映射为 `planner_invalid_output` 的 502，前端 catch 统一显示“发送失败”。这解释了为什么失败常在第三轮出现：前两轮尚未触发深度扩展，第三轮开始满足参与人数扩展条件。
+
+#### Issue 1 repair plan
+
+- 将“去重、深度扩展、轮换、fallback、messageLimit 归一化”合并为一个最终 arrangement policy；最终 plan 必须在离开 planner 前通过同一份 schema 校验。
+- `messageLimit` 至少等于最终首轮 participants 数量，并继续受 Phase 1 runtime cap 约束；不能让动态参与扩展产生非法 plan。
+- 为 planner invalid output、plan invariant failure、provider failure、timeout 建立内部可区分的错误 code 和 telemetry；前端仍隐藏内部机制，但不再把所有服务端失败混成无法诊断的单一状态。
+- 增加三轮连续请求测试：第二轮和第三轮携带完整 history，验证 request schema、planner、service、SSE 和 session 状态均可继续；覆盖深度扩展到 2–3 位时不会返回 502。
+- 增加真实 history budget 测试，验证接近边界时使用受限 summary/recent window，而不是无限拼接完整专家文本。
+
+#### Issue 2 root cause: fixed registry-order fallback and tie-break
+
+- 当前 fallback 固定返回 `winnicott`。
+- 轮换替代专家使用 `EXPERTS.find(expert => expert.slug !== current)`；`EXPERTS` 按出生年份排序，因此在 Winnicott 之后稳定选择 Freud。
+- 互补候选的 score 相同时，`.toSorted` 保留 registry 顺序；当前没有 session seed，也没有新会话的 opening coverage policy，所以不同新会话可能得到相同的第一、第二位专家。
+- planner 虽然收到多样性提示，但模型输出失败或只输出一个候选时，服务端固定顺序 policy 覆盖了自然变化；这不是用户可见 planner 的问题，而是服务端 tie-break 与 fallback 设计问题。
+
+#### Issue 2 repair plan
+
+- 在 browser party session 中生成不可见的 session seed，并随内部 arrangement context 使用；不把 seed、随机数、评分或选择理由发送给客户端。
+- 将候选排序拆为：相关性过滤/排序 → 近期参与惩罚与覆盖奖励 → 理论视角互补 → seeded tie-break。seed 只解决同分候选的自然变化，不能替代相关性。
+- 新会话首轮使用 diversified opening policy：允许 1 位轻量回应，但从多个合法开场专家池中按 seed 变化；不得固定 Winnicott 起步。
+- fallback 与正常 planner 使用同一 participant policy；planner 失败时也必须遵守 opening diversity、recent coverage 和“不能连续唯一回应”规则。
+- 在有限近期窗口中记录实际参与专家、唯一回应状态和覆盖计数；不保存 planner reason、score 或概率，也不向 UI 暴露未参与专家。
+- 增加测试：多 seed 产生多个合法开场组合；同 seed 可复现；不同用户新 session 不固定 Winnicott → Freud；连续多轮不固定同一专家或同一双人组合；深度表达可在 cap 内增加互补专家。
+
+#### Scope boundary
+
+本轮修复设计不修改 Homepage、单专家 `ChatWorkspace`、单专家 `/api/chat`、现有三种单专家模式，也不实现专家之间回应。Party UI 仍只显示实际到达的专家消息，planner 和多样性 policy 完全隐藏。
+
 ### Task 7: Phase 1 review gate
 
 **Files:**

@@ -120,4 +120,38 @@ describe("PartyChatWorkspace", () => {
     await screen.findByText("我们可以一起停留在这个问题上。");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it("keeps the same session seed and full multi-turn history through a third request", async () => {
+    let responseNumber = 0;
+    const fetchMock = vi.fn(async () => {
+      responseNumber += 1;
+      return partySseResponse([
+        { type: "plan" },
+        { type: "expert_start", id: `expert-${responseNumber}`, expertSlug: "winnicott", order: 0 },
+        { type: "expert_delta", id: `expert-${responseNumber}`, expertSlug: "winnicott", text: `reply-${responseNumber}` },
+        { type: "expert_done", id: `expert-${responseNumber}`, expertSlug: "winnicott", complete: true },
+        { type: "turn_done", expertMessageCount: 1 },
+        { type: "done" }
+      ]);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+
+    for (const input of ["first", "second", "third"]) {
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: input } });
+      fireEvent.click(screen.getByRole("button", { name: "送出" }));
+      await screen.findByText(`reply-${responseNumber}`);
+    }
+
+    const requests = fetchMock.mock.calls.map((call) => JSON.parse(String(call[1]?.body)) as {
+      history: unknown[];
+      sessionSeed: number;
+    });
+    expect(requests[0]?.history).toHaveLength(0);
+    expect(requests[1]?.history).toHaveLength(2);
+    expect(requests[2]?.history).toHaveLength(4);
+    expect(requests[0]?.sessionSeed).toEqual(expect.any(Number));
+    expect(requests[1]?.sessionSeed).toBe(requests[0]?.sessionSeed);
+    expect(requests[2]?.sessionSeed).toBe(requests[0]?.sessionSeed);
+  });
 });

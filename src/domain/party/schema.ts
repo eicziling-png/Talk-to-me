@@ -44,7 +44,8 @@ export const PartyConversationRequestSchema = z
     summary: z
       .object({ content: z.string().trim().min(1).max(MAX_PARTY_SUMMARY_CHARS) })
       .strict()
-      .optional()
+      .optional(),
+    sessionSeed: z.number().int().min(0).max(4_294_967_295).optional()
   })
   .strict() satisfies z.ZodType<PartyConversationRequest>;
 

@@ -8,6 +8,7 @@ export type PartyConversationRequest = {
   input: string;
   history: PartyMessage[];
   summary?: { content: string };
+  sessionSeed?: number;
 };
 
 export type PartyMessage =
@@ -87,4 +88,5 @@ export type PartySession = {
   messages: PartyBrowserMessage[];
   status: PartySessionStatus;
   failedInput: string | null;
+  sessionSeed: number;
 };

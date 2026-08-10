@@ -56,20 +56,28 @@ function applyParticipantPolicy(
     ];
   }
 
+  if (request.history.every((message) => message.role === "user") && participants.length === 1) {
+    participants = [{
+      ...participants[0]!,
+      expertSlug: selectOpeningExpert(request.sessionSeed ?? 0),
+      order: 0
+    }];
+  }
+
   const rotatedParticipants = participants.length === 1 && shouldRotateSoleResponder(request, participants[0]?.expertSlug)
     ? [
         {
-          expertSlug: EXPERTS.find((expert) => expert.slug !== participants[0]?.expertSlug)?.slug ?? participants[0]!.expertSlug,
+          expertSlug: chooseComplementaryCandidate(request, [participants[0]!.expertSlug]) ?? participants[0]!.expertSlug,
           focus: "从另一种角度回应当前表达",
           order: 0
         }
       ]
     : participants;
 
-  return {
+  return PartyPlanSchema.parse({
     participants: rotatedParticipants,
-    messageLimit: Math.min(plan.messageLimit, rotatedParticipants.length)
-  };
+    messageLimit: Math.max(rotatedParticipants.length, Math.min(plan.messageLimit, maxParticipants))
+  });
 }
 
 function shouldRotateSoleResponder(
@@ -144,9 +152,26 @@ function chooseComplementaryCandidate(
         const rightScore =
           (recentCounts.get(right.slug) ?? 0) * 10 +
           (selectedSchools.has(right.school) ? 5 : 0);
-        return leftScore - rightScore;
+        return leftScore - rightScore || seededRank(left.slug, request.sessionSeed ?? 0) - seededRank(right.slug, request.sessionSeed ?? 0);
       })[0]?.slug ?? null
   );
+}
+
+function selectOpeningExpert(sessionSeed: number): ExpertSlug {
+  const openingPool: ExpertSlug[] = [
+    "winnicott",
+    ...EXPERTS.filter((expert) => expert.slug !== "winnicott").map((expert) => expert.slug)
+  ];
+  return openingPool[Math.abs(sessionSeed) % openingPool.length] ?? "winnicott";
+}
+
+function seededRank(slug: ExpertSlug, sessionSeed: number): number {
+  let hash = (sessionSeed ^ 2_166_136_261) >>> 0;
+  for (const character of slug) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16_777_619) >>> 0;
+  }
+  return hash;
 }
 
 function getRecentResponderCounts(
