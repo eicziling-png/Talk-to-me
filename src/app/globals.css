@@ -2292,3 +2292,115 @@ button {
 .party-chatpage .party-title-card p {
   white-space: normal;
 }
+
+.party-chatpage .party-plan-note {
+  margin: 0;
+  padding: 18px 0 0;
+  color: rgba(27, 42, 74, 0.58);
+  font-family: var(--chat-mixed-font);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.party-chatpage .party-transcript {
+  gap: 18px;
+}
+
+.party-chatpage .party-message {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.party-chatpage .party-message--user {
+  justify-content: flex-end;
+}
+
+.party-chatpage .party-message--expert,
+.party-chatpage .party-message--safety {
+  justify-content: flex-start;
+}
+
+.party-chatpage .party-message-stack {
+  display: flex;
+  min-width: 0;
+  max-width: min(680px, 86%);
+  flex-direction: column;
+  gap: 6px;
+}
+
+.party-chatpage .party-message--user .party-message-stack {
+  align-items: flex-end;
+}
+
+.party-chatpage .party-message-name {
+  margin: 0;
+  color: #1b2a4a;
+  font-family: var(--chat-mixed-font);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.party-chatpage .party-message-body {
+  border: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.52);
+  padding: 12px 16px;
+}
+
+.party-chatpage .party-message--user .party-message-body {
+  background: rgba(224, 216, 204, 0.56);
+}
+
+.party-chatpage .party-message-body p {
+  margin: 0;
+  color: #1b2a4a;
+  font-family: var(--chat-mixed-font);
+  font-size: 1rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.party-chatpage .party-message-status {
+  margin-top: 8px;
+  color: rgba(27, 42, 74, 0.55);
+  font-size: 0.78rem;
+}
+
+.party-chatpage .party-message-time {
+  color: #a0a8b4;
+  font-family: var(--chat-mixed-font);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.party-chatpage .party-marker {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  margin-top: 9px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: #516b7b;
+}
+
+.party-chatpage .party-marker--freud { background: #8c5c4d; }
+.party-chatpage .party-marker--lacan { background: #596fa8; }
+.party-chatpage .party-marker--klein { background: #846b9f; }
+.party-chatpage .party-marker--kohut { background: #b17953; }
+.party-chatpage .party-marker--winnicott { background: #62856a; }
+.party-chatpage .party-marker--yalom { background: #4e8291; }
+.party-chatpage .party-marker--bion { background: #68707d; }
+
+.party-chatpage .party-message--safety .party-message-body {
+  border-left: 3px solid #b17953;
+  background: rgba(255, 247, 225, 0.72);
+}
+
+@media (max-width: 700px) {
+  .party-chatpage .party-message-stack {
+    max-width: 90%;
+  }
+}

@@ -36,8 +36,14 @@ describe("Let's party entry", () => {
     expect(screen.queryByRole("region", { name: "群聊参与者" })).not.toBeInTheDocument();
   });
 
-  it("keeps party submissions local until the multi-expert API exists", async () => {
-    const fetchSpy = vi.fn();
+  it("sends party submissions only to the isolated multi-expert API", async () => {
+    const fetchSpy = vi.fn(async () =>
+      new Response(
+        'event: plan\ndata: {"type":"plan","selectedExpertSlugs":["winnicott"],"messageLimit":1}\n\n' +
+          'event: done\ndata: {"type":"done"}\n\n',
+        { headers: { "content-type": "text/event-stream" } }
+      )
+    );
     vi.stubGlobal("fetch", fetchSpy);
     const view = await PartyChatPage();
     render(view);
@@ -46,6 +52,11 @@ describe("Let's party entry", () => {
     fireEvent.click(screen.getByRole("button", { name: /送出/ }));
 
     expect(screen.getByText("大家好")).toBeInTheDocument();
-    expect(fetchSpy).not.toHaveBeenCalled();
+    await screen.findByText(/本轮有 1 位专家回应/);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "/api/chat/party",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(fetchSpy).not.toHaveBeenCalledWith("/api/chat", expect.anything());
   });
 });
