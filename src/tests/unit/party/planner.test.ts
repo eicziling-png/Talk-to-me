@@ -62,6 +62,28 @@ describe("conversation arrangement planner", () => {
     });
   });
 
+  it("applies participation rotation even when the planner falls back", async () => {
+    const plan = await planConversationArrangement(
+      {
+        ...request,
+        history: [
+          { role: "user", content: "我好孤单" },
+          { role: "expert", expertSlug: "winnicott", content: "我会陪你停留在这里。" }
+        ]
+      },
+      {
+        modelProvider: {
+          async *stream() {
+            throw new Error("planner unavailable");
+          }
+        }
+      }
+    );
+
+    expect(plan.participants).toHaveLength(1);
+    expect(plan.participants[0]?.expertSlug).not.toBe("winnicott");
+  });
+
   it("does not expose planner output as a user-facing response", async () => {
     let captured: ModelMessage[] = [];
     await planConversationArrangement(request, {

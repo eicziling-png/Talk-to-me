@@ -24,7 +24,7 @@ export async function planConversationArrangement(
     const parsed = PartyPlanSchema.parse(JSON.parse(rawText));
     return applyParticipantPolicy(parsed, maxParticipants, request);
   } catch {
-    return fallbackPlan();
+    return applyParticipantPolicy(fallbackPlan(), maxParticipants, request);
   }
 }
 
