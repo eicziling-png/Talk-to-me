@@ -2013,3 +2013,145 @@ button {
   max-height: 110px;
   overflow-y: hidden;
 }
+
+/* Responsive homepage guard: at narrower viewports reserve a real column for
+   the live copy instead of letting its legacy absolute coordinates cross the
+   watercolor artwork. Desktop coordinates above remain unchanged. */
+@media (max-width: 1100px) {
+  .figma-homepage {
+    display: grid;
+    grid-template-columns: minmax(0, 42%) minmax(0, 58%);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-height: 100svh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .figma-homepage__art {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    transform: none;
+    object-fit: cover;
+    object-position: center bottom;
+    z-index: 0;
+  }
+
+  .figma-homepage__intro {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    top: auto;
+    left: auto;
+    width: auto;
+    min-width: 0;
+    transform: none;
+    padding: clamp(28px, 6vw, 72px) clamp(22px, 4vw, 56px) 0;
+    z-index: 1;
+  }
+
+  .figma-homepage .home-expert-list {
+    position: relative;
+    grid-column: 2;
+    grid-row: 2;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: clamp(22px, 4vw, 48px) clamp(22px, 4vw, 56px);
+    align-self: center;
+    transform: none;
+    column-gap: clamp(20px, 4vw, 56px);
+    z-index: 1;
+  }
+
+  .figma-homepage .figma-homepage__expert-column:nth-child(2) {
+    transform: none;
+  }
+
+  .figma-homepage__expert {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .figma-homepage .home-safety-note {
+    position: relative;
+    grid-column: 2;
+    grid-row: 3;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0 clamp(22px, 4vw, 56px) clamp(18px, 3vw, 32px);
+    z-index: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .figma-homepage {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(240px, 42svh) auto auto auto;
+  }
+
+  .figma-homepage__art {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .figma-homepage__intro {
+    grid-column: 1;
+    grid-row: 2;
+    padding: clamp(24px, 7vw, 42px) clamp(22px, 7vw, 42px) 0;
+  }
+
+  .figma-homepage .home-expert-list {
+    grid-column: 1;
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: clamp(20px, 5vw, 32px) clamp(22px, 7vw, 42px);
+    column-gap: clamp(20px, 8vw, 56px);
+    row-gap: 0;
+  }
+
+  .figma-homepage__expert-column {
+    gap: clamp(24px, 7vw, 42px);
+  }
+
+  .figma-homepage__expert {
+    white-space: normal;
+  }
+
+  .figma-homepage .home-safety-note {
+    grid-column: 1;
+    grid-row: 4;
+    padding: 0 clamp(22px, 7vw, 42px) clamp(18px, 5vw, 28px);
+  }
+}
+
+@media (max-width: 520px) {
+  .figma-homepage .home-expert-list {
+    grid-template-columns: 1fr;
+  }
+
+  .figma-homepage .figma-homepage__expert-column:nth-child(2) {
+    margin-top: clamp(24px, 7vw, 42px);
+  }
+
+  .figma-homepage__expert-column {
+    gap: clamp(20px, 6vw, 36px);
+  }
+}
