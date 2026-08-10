@@ -2277,3 +2277,64 @@ button {
     padding-left: clamp(16px, 6vw, 32px);
   }
 }
+
+/* Party room additions: keep the existing chat language and reserve only a
+   lightweight participant strip for the future multi-voice conversation. */
+.figma-homepage__party-entry {
+  margin-top: 0;
+}
+
+.party-chatpage .party-chat-header {
+  flex-basis: 27%;
+}
+
+.party-chatpage .party-title-card {
+  min-width: 0;
+}
+
+.party-chatpage .party-title-card p {
+  white-space: normal;
+}
+
+.party-chatpage .party-participants {
+  padding: 10px 50px 0;
+  color: rgba(27, 42, 74, 0.62);
+  font-family: var(--chat-mixed-font);
+  font-size: clamp(0.78rem, 1vw, 0.95rem);
+  line-height: 1.5;
+}
+
+.party-chatpage .party-participants p {
+  margin: 0 0 4px;
+}
+
+.party-chatpage .party-participants ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.party-chatpage .party-participants li {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .party-chatpage .party-participants {
+    padding-right: clamp(18px, 4vw, 50px);
+    padding-left: clamp(18px, 4vw, 50px);
+  }
+}
+
+@media (max-width: 700px) {
+  .party-chatpage .party-chat-header {
+    flex-basis: auto;
+  }
+
+  .party-chatpage .party-participants {
+    padding-right: clamp(16px, 6vw, 32px);
+    padding-left: clamp(16px, 6vw, 32px);
+  }
+}

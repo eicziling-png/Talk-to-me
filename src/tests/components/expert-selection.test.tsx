@@ -11,7 +11,7 @@ describe("home expert browsing", () => {
     const navigation = screen.getByRole("navigation", { name: "选择一位历史心理学家" });
     const links = within(navigation).getAllByRole("link");
 
-    expect(links).toHaveLength(7);
+    expect(links).toHaveLength(8);
     expect(screen.getByRole("heading", { name: "TALK TO ME" })).toBeInTheDocument();
     expect(screen.getByText("对话过去的声音，靠近此刻的自己")).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveClass("figma-homepage");
@@ -31,6 +31,7 @@ describe("home expert browsing", () => {
       "/chat/klein",
       "/chat/winnicott",
       "/chat/bion",
+      "/chat/party",
       "/chat/lacan",
       "/chat/kohut",
       "/chat/yalom"
