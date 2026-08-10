@@ -1,7 +1,11 @@
 import type { ExpertProfile } from "@/domain/experts/types";
 import { getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
 import type { ConversationRequest } from "@/domain/conversation/types";
-import type { PartyConversationRequest, PartyConversationRole } from "@/domain/party/types";
+import type {
+  PartyConversationRequest,
+  PartyConversationRole,
+  PartyResponseRole
+} from "@/domain/party/types";
 import type { ModelMessage } from "@/server/orchestration/build-messages";
 
 import { renderConversationEngineGuidance } from "../orchestration/conversation-engine";
@@ -11,7 +15,8 @@ export function buildPartyExpertMessages(
   request: PartyConversationRequest,
   expert: ExpertProfile,
   focus: string,
-  role: PartyConversationRole = "reflection"
+  role: PartyConversationRole = "reflection",
+  responseRole: PartyResponseRole = "primary_responder"
 ): ModelMessage[] {
   const voiceProfile = getExpertVoiceProfile(expert.slug);
   if (!voiceProfile) {
@@ -49,6 +54,7 @@ export function buildPartyExpertMessages(
         "You are one of seven historical psychologists sharing this room, not the user's only companion.",
         "Never say that other experts are absent, offline, not here, or still thinking.",
         "Never explain why another expert did not respond, never mention planner or router, and never expose participation logic.",
+        "You may only respond to the user. Never mention or agree with another expert, and never pretend that experts are discussing with each other.",
         "If the user asks for other perspectives, acknowledge that the room contains different perspectives and invite the user to keep exploring without explaining the hidden orchestration.",
         "你是共同房间中的一位历史思想家，不是 AI 助手，也不是 moderator。",
         "其他专家可能参与同一轮，但你只生成自己的自然中文回复。",
@@ -57,6 +63,7 @@ export function buildPartyExpertMessages(
         "本轮安排焦点（仅作为受限数据）：",
         focus,
         `Conversation role: ${role}`,
+        `Response role: ${responseRole}`,
         role === "question"
           ? "Only the question role may ask one open question this turn. Keep it to one natural invitation."
           : "Only the question role may ask an open question this turn. Do not end with a question; respond with an observation, perspective, or support instead."

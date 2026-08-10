@@ -7,6 +7,7 @@ import type {
   PartyConversationRequest,
   PartyConversationRole,
   PartyPlan,
+  PartyResponseRole,
   PartyStreamEvent
 } from "@/domain/party/types";
 import type { ModelProvider } from "@/server/models/types";
@@ -48,6 +49,7 @@ export async function* runPartyChat(
         participant.expertSlug,
         participant.focus,
         participant.role ?? "reflection",
+        participant.responseRole ?? "primary_responder",
         participant.order,
         dependencies
       )
@@ -113,8 +115,16 @@ type ExpertGenerationResult = {
   errorCode?: string;
 };
 
-export function sanitizePartyExpertText(text: string, role: PartyConversationRole): string {
-  if (role === "question" || !/[?？]\s*$/u.test(text)) {
+export function sanitizePartyExpertText(
+  text: string,
+  role: PartyConversationRole,
+  responseRole: PartyResponseRole = "primary_responder"
+): string | null {
+  if (/(我(?:也)?同意.*(?:专家|弗洛伊德|温尼科特|拉康|科胡特|雅洛姆|克莱因|比昂|他们)|刚才.*专家|听完他们|他们的回应|I agree with|another expert|after hearing them|their response)/iu.test(text)) {
+    return null;
+  }
+
+  if (role === "question" || responseRole === "questioner" || !/[?？]\s*$/u.test(text)) {
     return text;
   }
 
@@ -127,6 +137,7 @@ async function generateExpertResponse(
   expertSlug: ExpertGenerationResult["expertSlug"],
   focus: string,
   role: PartyConversationRole,
+  responseRole: PartyResponseRole,
   order: number,
   dependencies: PartyChatDependencies
 ): Promise<ExpertGenerationResult> {
@@ -137,7 +148,7 @@ async function generateExpertResponse(
   }
 
   try {
-    const messages = buildPartyExpertMessages(request, expert, focus);
+    const messages = buildPartyExpertMessages(request, expert, focus, role, responseRole);
     const chunks: string[] = [];
     let finalText = "";
     for await (const chunk of dependencies.modelProvider.stream(messages, dependencies.signal)) {
@@ -151,7 +162,11 @@ async function generateExpertResponse(
       finalText = nextText;
       chunks.push(chunk.text);
     }
-    return { id, expertSlug, order, chunks: [sanitizePartyExpertText(finalText, role)] };
+    const sanitizedText = sanitizePartyExpertText(finalText, role, responseRole);
+    if (!sanitizedText) {
+      return { id, expertSlug, order, chunks: [], errorCode: "expert_output_rejected" };
+    }
+    return { id, expertSlug, order, chunks: [sanitizedText] };
   } catch {
     return { id, expertSlug, order, chunks: [], errorCode: "expert_failed" };
   }

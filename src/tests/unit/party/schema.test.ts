@@ -53,6 +53,27 @@ describe("party schemas", () => {
     ).toThrow();
   });
 
+  it("accepts response intensity roles and allows only one primary responder", () => {
+    const plan = PartyPlanSchema.parse({
+      participants: [
+        { expertSlug: "freud", focus: "main", order: 0, responseRole: "primary_responder" },
+        { expertSlug: "yalom", focus: "brief", order: 1, responseRole: "listener" }
+      ],
+      messageLimit: 2
+    });
+
+    expect(plan.participants[0]?.responseRole).toBe("primary_responder");
+    expect(() =>
+      PartyPlanSchema.parse({
+        participants: [
+          { expertSlug: "freud", focus: "first", order: 0, responseRole: "primary_responder" },
+          { expertSlug: "yalom", focus: "second", order: 1, responseRole: "primary_responder" }
+        ],
+        messageLimit: 2
+      })
+    ).toThrow();
+  });
+
   it("rejects duplicate experts and unknown stream event types", () => {
     expect(() =>
       PartyPlanSchema.parse({

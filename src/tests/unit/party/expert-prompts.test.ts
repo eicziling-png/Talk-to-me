@@ -61,12 +61,14 @@ describe("party expert prompts", () => {
     const expert = getExpert("winnicott");
     if (!expert) throw new Error("Expected Winnicott profile");
 
-    const content = buildPartyExpertMessages(request, expert, "hold the feeling", "support")
+    const content = buildPartyExpertMessages(request, expert, "hold the feeling", "support", "listener")
       .map((message) => message.content)
       .join("\n");
 
     expect(content).toContain("support");
     expect(content).toContain("Only the question role may ask an open question");
     expect(content).toContain("Do not end with a question");
+    expect(content).toContain("You may only respond to the user");
+    expect(content).toContain("Never mention or agree with another expert");
   });
 });

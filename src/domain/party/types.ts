@@ -12,6 +12,7 @@ export type PartyConversationRequest = {
 };
 
 export type PartyConversationRole = "reflection" | "perspective" | "support" | "question";
+export type PartyResponseRole = "primary_responder" | "supporting_voice" | "listener" | "questioner";
 
 export type PartyMessage =
   | {
@@ -29,6 +30,7 @@ export type PartyParticipantPlan = {
   focus: string;
   order: number;
   role?: PartyConversationRole;
+  responseRole?: PartyResponseRole;
 };
 
 export type PartyPlan = {

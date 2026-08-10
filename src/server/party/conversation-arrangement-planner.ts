@@ -4,6 +4,7 @@ import type { ExpertSlug } from "@/domain/experts/types";
 import type {
   PartyConversationRequest,
   PartyConversationRole,
+  PartyResponseRole,
   PartyParticipantPlan,
   PartyPlan
 } from "@/domain/party/types";
@@ -87,6 +88,7 @@ function applyParticipantPolicy(
 
 function assignConversationRoles(participants: PartyParticipantPlan[]): PartyParticipantPlan[] {
   let questionAssigned = false;
+  let primaryAssigned = false;
 
   return participants.map((participant, index) => {
     const role: PartyConversationRole =
@@ -103,7 +105,22 @@ function assignConversationRoles(participants: PartyParticipantPlan[]): PartyPar
       questionAssigned = true;
     }
 
-    return { ...participant, role: normalizedRole };
+    const responseRole: PartyResponseRole =
+      participant.responseRole ??
+      (normalizedRole === "question"
+        ? "questioner"
+        : participants.length === 1 || (!primaryAssigned && index === 0)
+          ? "primary_responder"
+          : index === participants.length - 1
+            ? "listener"
+            : "supporting_voice");
+    const normalizedResponseRole =
+      responseRole === "primary_responder" && primaryAssigned ? "supporting_voice" : responseRole;
+    if (normalizedResponseRole === "primary_responder") {
+      primaryAssigned = true;
+    }
+
+    return { ...participant, role: normalizedRole, responseRole: normalizedResponseRole };
   });
 }
 

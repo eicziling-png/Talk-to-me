@@ -244,6 +244,8 @@ describe("conversation arrangement planner", () => {
 
     expect(plan.participants.filter((participant) => participant.role === "question")).toHaveLength(1);
     expect(plan.participants.every((participant) => participant.role)).toBe(true);
+    expect(plan.participants.filter((participant) => participant.responseRole === "primary_responder")).toHaveLength(1);
+    expect(plan.participants.every((participant) => participant.responseRole)).toBe(true);
   });
 
   it("does not keep alternating the same two sole responders across deep turns", async () => {

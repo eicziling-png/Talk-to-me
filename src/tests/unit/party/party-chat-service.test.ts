@@ -162,4 +162,26 @@ describe("party chat service", () => {
     expect(supportText).not.toContain("?");
     expect(deltas.some((event) => event.type === "expert_delta" && event.expertSlug === "freud" && event.text.includes("?"))).toBe(true);
   });
+
+  it("drops a supporting voice that pretends to answer another expert", async () => {
+    const rolePlan = {
+      participants: [
+        { expertSlug: "freud" as const, focus: "main", order: 0, responseRole: "primary_responder" as const },
+        { expertSlug: "winnicott" as const, focus: "brief", order: 1, responseRole: "supporting_voice" as const }
+      ],
+      messageLimit: 2
+    };
+    const events = await collect(
+      runPartyChat(request, {
+        planner: async () => rolePlan,
+        modelProvider: providerByExpert({
+          freud: ["你刚才说的很重要。"],
+          winnicott: ["我同意弗洛伊德刚才的看法。"]
+        })
+      })
+    );
+
+    expect(events.some((event) => event.type === "expert_delta" && event.expertSlug === "freud")).toBe(true);
+    expect(events.some((event) => event.type === "expert_delta" && event.expertSlug === "winnicott")).toBe(false);
+  });
 });
