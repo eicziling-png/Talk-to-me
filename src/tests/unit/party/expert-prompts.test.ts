@@ -56,4 +56,17 @@ describe("party expert prompts", () => {
     expect(content).toContain("Never explain why another expert did not respond");
     expect(content).toContain("never mention planner");
   });
+
+  it("gives non-question roles an explicit no-follow-up-question rule", () => {
+    const expert = getExpert("winnicott");
+    if (!expert) throw new Error("Expected Winnicott profile");
+
+    const content = buildPartyExpertMessages(request, expert, "hold the feeling", "support")
+      .map((message) => message.content)
+      .join("\n");
+
+    expect(content).toContain("support");
+    expect(content).toContain("Only the question role may ask an open question");
+    expect(content).toContain("Do not end with a question");
+  });
 });

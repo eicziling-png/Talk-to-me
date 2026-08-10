@@ -54,7 +54,7 @@ describe("conversation arrangement planner", () => {
       }
     });
 
-    expect(plan).toEqual({
+    expect(plan).toMatchObject({
       participants: [
         { expertSlug: "winnicott", focus: "先提供一处可以停留的空间", order: 0 }
       ],
@@ -216,6 +216,34 @@ describe("conversation arrangement planner", () => {
 
     expect(repeat.participants[0]?.expertSlug).toBe(first.participants[0]?.expertSlug);
     expect(second.participants[0]?.expertSlug).not.toBe(first.participants[0]?.expertSlug);
+  });
+
+  it("assigns at most one question role when arranging a multi-expert turn", async () => {
+    const plan = await planConversationArrangement(
+      {
+        ...request,
+        input: "\u6211\u6700\u8fd1\u5f88\u96be\u8fc7\uff0c\u56e0\u4e3a\u6211\u5728\u5173\u7cfb\u91cc\u603b\u662f\u6d88\u5931\u3002",
+        history: [
+          { role: "user", content: "\u6211\u6700\u8fd1\u5f88\u5b64\u5355" },
+          { role: "expert", expertSlug: "winnicott", content: "\u6211\u5728\u8fd9\u91cc" },
+          { role: "user", content: "\u6211\u4e0d\u77e5\u9053\u4e3a\u4ec0\u4e48" },
+          { role: "expert", expertSlug: "freud", content: "\u6211\u4eec\u53ef\u4ee5\u770b\u770b\u91cd\u590d" }
+        ]
+      },
+      {
+        modelProvider: providerFromJson({
+          participants: [
+            { expertSlug: "winnicott", focus: "support", order: 0, role: "support" },
+            { expertSlug: "yalom", focus: "perspective", order: 1, role: "perspective" },
+            { expertSlug: "freud", focus: "question", order: 2, role: "question" }
+          ],
+          messageLimit: 3
+        })
+      }
+    );
+
+    expect(plan.participants.filter((participant) => participant.role === "question")).toHaveLength(1);
+    expect(plan.participants.every((participant) => participant.role)).toBe(true);
   });
 
   it("does not keep alternating the same two sole responders across deep turns", async () => {

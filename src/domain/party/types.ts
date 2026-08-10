@@ -11,6 +11,8 @@ export type PartyConversationRequest = {
   sessionSeed?: number;
 };
 
+export type PartyConversationRole = "reflection" | "perspective" | "support" | "question";
+
 export type PartyMessage =
   | {
       role: "user";
@@ -26,6 +28,7 @@ export type PartyParticipantPlan = {
   expertSlug: ExpertSlug;
   focus: string;
   order: number;
+  role?: PartyConversationRole;
 };
 
 export type PartyPlan = {

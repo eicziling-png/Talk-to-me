@@ -32,6 +32,27 @@ describe("party schemas", () => {
     expect(plan.participants).toHaveLength(4);
   });
 
+  it("accepts conversation roles and rejects more than one question role", () => {
+    const plan = PartyPlanSchema.parse({
+      participants: [
+        { expertSlug: "freud", focus: "reflection", order: 0, role: "reflection" },
+        { expertSlug: "yalom", focus: "question", order: 1, role: "question" }
+      ],
+      messageLimit: 2
+    });
+
+    expect(plan.participants[1]?.role).toBe("question");
+    expect(() =>
+      PartyPlanSchema.parse({
+        participants: [
+          { expertSlug: "freud", focus: "first", order: 0, role: "question" },
+          { expertSlug: "yalom", focus: "second", order: 1, role: "question" }
+        ],
+        messageLimit: 2
+      })
+    ).toThrow();
+  });
+
   it("rejects duplicate experts and unknown stream event types", () => {
     expect(() =>
       PartyPlanSchema.parse({

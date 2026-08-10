@@ -11,6 +11,7 @@ const MAX_PARTY_HISTORY_MESSAGE_CHARS = 4_000;
 const MAX_PARTY_SUMMARY_CHARS = 2_000;
 const MAX_PARTY_FOCUS_CHARS = 240;
 const MAX_PARTY_EVENT_TEXT_CHARS = 8_000;
+const partyRoleSchema = z.enum(["reflection", "perspective", "support", "question"]);
 
 const partyMessageSchema = z.discriminatedUnion("role", [
   z
@@ -32,7 +33,8 @@ const partyParticipantPlanSchema = z
   .object({
     expertSlug: ExpertSlugSchema,
     focus: z.string().trim().min(1).max(MAX_PARTY_FOCUS_CHARS),
-    order: z.number().int().min(0)
+    order: z.number().int().min(0),
+    role: partyRoleSchema.optional()
   })
   .strict();
 
@@ -79,6 +81,15 @@ export const PartyPlanSchema = z
         code: "custom",
         message: "Party message limit cannot be lower than participant count.",
         path: ["messageLimit"]
+      });
+    }
+
+    const questionRoles = plan.participants.filter((participant) => participant.role === "question");
+    if (questionRoles.length > 1) {
+      context.addIssue({
+        code: "custom",
+        message: "Party plans can assign the question role to at most one expert.",
+        path: ["participants"]
       });
     }
   }) satisfies z.ZodType<PartyPlan>;

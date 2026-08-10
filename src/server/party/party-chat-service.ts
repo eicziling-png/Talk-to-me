@@ -3,7 +3,12 @@ import { assessInput } from "@/domain/safety/classify-input";
 import { buildSafetyResponse } from "@/domain/safety/crisis-response";
 import { reviewOutput } from "@/domain/safety/review-output";
 import { PartyPlanSchema } from "@/domain/party/schema";
-import type { PartyConversationRequest, PartyPlan, PartyStreamEvent } from "@/domain/party/types";
+import type {
+  PartyConversationRequest,
+  PartyConversationRole,
+  PartyPlan,
+  PartyStreamEvent
+} from "@/domain/party/types";
 import type { ModelProvider } from "@/server/models/types";
 
 import { buildPartyExpertMessages } from "./build-expert-messages";
@@ -42,6 +47,7 @@ export async function* runPartyChat(
         request,
         participant.expertSlug,
         participant.focus,
+        participant.role ?? "reflection",
         participant.order,
         dependencies
       )
@@ -107,10 +113,20 @@ type ExpertGenerationResult = {
   errorCode?: string;
 };
 
+export function sanitizePartyExpertText(text: string, role: PartyConversationRole): string {
+  if (role === "question" || !/[?？]\s*$/u.test(text)) {
+    return text;
+  }
+
+  const withoutTrailingQuestion = text.replace(/\s*[^.!?。！？]*[?？]\s*$/u, "").trim();
+  return withoutTrailingQuestion || text.replace(/[?？]\s*$/u, "。").trim();
+}
+
 async function generateExpertResponse(
   request: PartyConversationRequest,
   expertSlug: ExpertGenerationResult["expertSlug"],
   focus: string,
+  role: PartyConversationRole,
   order: number,
   dependencies: PartyChatDependencies
 ): Promise<ExpertGenerationResult> {
@@ -135,7 +151,7 @@ async function generateExpertResponse(
       finalText = nextText;
       chunks.push(chunk.text);
     }
-    return { id, expertSlug, order, chunks };
+    return { id, expertSlug, order, chunks: [sanitizePartyExpertText(finalText, role)] };
   } catch {
     return { id, expertSlug, order, chunks: [], errorCode: "expert_failed" };
   }

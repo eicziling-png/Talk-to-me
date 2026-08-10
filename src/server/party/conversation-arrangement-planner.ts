@@ -1,7 +1,12 @@
 import { PartyPlanSchema } from "@/domain/party/schema";
 import { EXPERTS } from "@/domain/experts/registry";
 import type { ExpertSlug } from "@/domain/experts/types";
-import type { PartyConversationRequest, PartyPlan } from "@/domain/party/types";
+import type {
+  PartyConversationRequest,
+  PartyConversationRole,
+  PartyParticipantPlan,
+  PartyPlan
+} from "@/domain/party/types";
 import type { ModelProvider } from "@/server/models/types";
 
 import { buildConversationArrangementMessages } from "./build-planner-messages";
@@ -75,8 +80,30 @@ function applyParticipantPolicy(
     : participants;
 
   return PartyPlanSchema.parse({
-    participants: rotatedParticipants,
+    participants: assignConversationRoles(rotatedParticipants),
     messageLimit: Math.max(rotatedParticipants.length, Math.min(plan.messageLimit, maxParticipants))
+  });
+}
+
+function assignConversationRoles(participants: PartyParticipantPlan[]): PartyParticipantPlan[] {
+  let questionAssigned = false;
+
+  return participants.map((participant, index) => {
+    const role: PartyConversationRole =
+      participant.role ??
+      (participants.length === 1
+        ? "reflection"
+        : index === participants.length - 1
+          ? "question"
+          : index === 0
+            ? "support"
+            : "perspective");
+    const normalizedRole = role === "question" && questionAssigned ? "reflection" : role;
+    if (normalizedRole === "question") {
+      questionAssigned = true;
+    }
+
+    return { ...participant, role: normalizedRole };
   });
 }
 

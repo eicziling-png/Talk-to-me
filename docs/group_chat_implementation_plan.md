@@ -526,6 +526,48 @@ Steps:
 
 ## Commit boundaries
 
+### Post-Phase-1 adjustment: one-question-per-turn orchestration
+
+本次人工测试新增的设计变更已进入实现。实现保持现有单专家链路和 party UI 展示边界不变。
+
+#### Architecture changes
+
+- 将 planner 输出从“参与者安排”扩展为“参与者 + conversation role + focus + order”的 arrangement contract。
+- 角色集合固定为 `reflection`、`perspective`、`support`、`question`，但 contract 使用可扩展字符串/版本化结构，避免阻碍未来新增角色。
+- 增加最终 arrangement validator：实际参与的专家最多一个 `question` role；角色缺失或非法时使用安全的非提问角色降级，而不是让整轮失败。
+- 将“问题预算”作为编排约束，而不是依赖模型自行遵守；planner、expert prompt 和输出 review 三层都需要表达这一规则。
+
+#### Prompt changes
+
+- planner prompt 明确：本轮最多一个专家负责开放式问题，其他专家必须以观察、视角、支持或简短回应结束。
+- expert prompt 明确共同房间身份：专家不是独立咨询师，不需要每次通过提问推动对话。
+- `question` role 只允许提出一个开放式问题；其余角色禁止用开放式问题收尾，并禁止模板化地追加“你觉得……？”、“你是否……？”、“可以聊聊……吗？”。
+- 保留人格差异、历史边界和 Talk to me 的陪伴感；角色只约束交流动作，不把专家变成无差别的功能模块。
+
+#### Runtime and output review
+
+- 首轮仍可并行生成；展示顺序继续由 planner 决定。
+- 在 expert output review 中统计每条消息的开放式问题候选；若多个专家都提出问题，只保留 planner 指定的 `question` 专家问题，其余消息需要安全地收束为陈述，或在无法可靠收束时截断为无问题的有效内容。
+- 若 question 专家生成失败，本轮可以没有问题，不自动把另一个专家升级为追问者，避免并发输出再次形成多个邀请。
+- 前端不显示角色、问题预算、planner 选择或未分配 question 的专家；只显示实际专家消息。
+
+#### Testing strategy additions
+
+- Planner contract tests：验证多专家计划最多一个 `question` role，且每位参与专家都有合法 role。
+- Prompt tests：验证共同房间身份、角色说明和禁止多专家同时追问的规则存在；验证七位专家仍保留各自人格差异。
+- Output review tests：输入包含多个问句的多专家结果时，验证最终用户可见消息最多一个开放式问题。
+- Multi-turn tests：验证用户每轮最多面对一个需要回应的方向；下一轮仍可自然增加或减少专家参与。
+- Component/E2E tests：验证多个专家消息可以同时显示，但不显示角色、问题数量、选择原因或未参与专家；party 页面和单专家页面保持隔离。
+
+#### Acceptance criteria
+
+- 同一轮可以有多个专家表达观察、支持和不同视角。
+- 同一轮最多出现一个开放式问题；没有 question role 时允许零个问题。
+- 用户不需要在多个专家问题之间做选择。
+- 专家之间呈现为共享上下文下的自然补充，而不是三个独立 chatbot 同时提问。
+- 连续对话中不出现固定的“每条消息都以问题结尾”的模板化模式。
+- 不修改 Homepage、单专家 `ChatWorkspace`、单专家 `/api/chat` 或现有单专家 prompt。
+
 如果后续获得提交授权，建议按以下独立边界提交：
 
 1. `feat: add party conversation contracts`

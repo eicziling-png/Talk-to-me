@@ -135,4 +135,31 @@ describe("party chat service", () => {
 
     expect(events.some((event) => (event.type as string) === "peer_response")).toBe(false);
   });
+
+  it("removes trailing questions from non-question roles", async () => {
+    const rolePlan = {
+      participants: [
+        { expertSlug: "freud" as const, focus: "question", order: 0, role: "question" as const },
+        { expertSlug: "winnicott" as const, focus: "support", order: 1, role: "support" as const }
+      ],
+      messageLimit: 2
+    };
+    const events = await collect(
+      runPartyChat(request, {
+        planner: async () => rolePlan,
+        modelProvider: providerByExpert({
+          freud: ["What matters most right now?"],
+          winnicott: ["You can let this feeling be here. What do you think?"]
+        })
+      })
+    );
+    const deltas = events.filter((event) => event.type === "expert_delta");
+    const supportText = deltas
+      .filter((event) => event.type === "expert_delta" && event.expertSlug === "winnicott")
+      .map((event) => (event.type === "expert_delta" ? event.text : ""))
+      .join("");
+
+    expect(supportText).not.toContain("?");
+    expect(deltas.some((event) => event.type === "expert_delta" && event.expertSlug === "freud" && event.text.includes("?"))).toBe(true);
+  });
 });

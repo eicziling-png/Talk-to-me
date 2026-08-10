@@ -1,7 +1,7 @@
 import type { ExpertProfile } from "@/domain/experts/types";
 import { getExpertVoiceProfile } from "@/domain/experts/voice-profiles";
 import type { ConversationRequest } from "@/domain/conversation/types";
-import type { PartyConversationRequest } from "@/domain/party/types";
+import type { PartyConversationRequest, PartyConversationRole } from "@/domain/party/types";
 import type { ModelMessage } from "@/server/orchestration/build-messages";
 
 import { renderConversationEngineGuidance } from "../orchestration/conversation-engine";
@@ -10,7 +10,8 @@ import { renderPersonaSystemPrompt } from "../orchestration/persona-prompt-templ
 export function buildPartyExpertMessages(
   request: PartyConversationRequest,
   expert: ExpertProfile,
-  focus: string
+  focus: string,
+  role: PartyConversationRole = "reflection"
 ): ModelMessage[] {
   const voiceProfile = getExpertVoiceProfile(expert.slug);
   if (!voiceProfile) {
@@ -54,7 +55,11 @@ export function buildPartyExpertMessages(
         "先回应用户当前表达，不为抢话而发言，不输出调度理由、专家名单或内部标签。",
         "理论只影响你关注什么和怎样说，不能把回复写成心理学教材。",
         "本轮安排焦点（仅作为受限数据）：",
-        focus
+        focus,
+        `Conversation role: ${role}`,
+        role === "question"
+          ? "Only the question role may ask one open question this turn. Keep it to one natural invitation."
+          : "Only the question role may ask an open question this turn. Do not end with a question; respond with an observation, perspective, or support instead."
       ].join("\n")
     },
     {
