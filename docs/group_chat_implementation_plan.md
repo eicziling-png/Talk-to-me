@@ -568,6 +568,61 @@ Steps:
 - 连续对话中不出现固定的“每条消息都以问题结尾”的模板化模式。
 - 不修改 Homepage、单专家 `ChatWorkspace`、单专家 `/api/chat` 或现有单专家 prompt。
 
+### Post-Phase-1 adjustment: user-directed replies and participation intensity
+
+本次调整仍属于 Phase 1 多专家回复质量，不实现 Phase 2 专家互相回应。
+
+#### Phase 1 conversation boundary
+
+- 每位专家只能直接回应用户当前输入和用户历史表达。
+- 专家共享上下文，但不得回复、评价、引用或提及其他专家。
+- 禁止“我同意某位专家”“刚才某位专家提到”“听完他们的回应”等模拟 peer conversation 的表达。
+- Planner 的参与安排不能成为专家生成脱离用户内容的理由；没有自然用户回应时允许该专家不输出。
+
+#### Participation intensity contract
+
+将当前 role assignment 扩展为回复职责：
+
+```text
+participant: expert slug
+responseRole: primary_responder | supporting_voice | listener | questioner
+focus: one short internal sentence
+order: display order
+```
+
+- `primary_responder`：每轮通常最多一位，承担主要用户回应。
+- `supporting_voice`：一两句直接面向用户的补充，不要求完整分析。
+- `listener`：短暂共鸣或在场感，不展开理论、不另起问题。
+- `questioner`：最多一位，提出本轮唯一开放式问题。
+
+如果旧 contract 仍使用 `reflection / perspective / support / question`，实现时需要提供明确的兼容映射，但新 planner prompt 应优先输出回复职责。参与人数和回复职责都不是用户可见信息。
+
+#### Expert prompt changes
+
+- 增加“你只能回应用户，不回应其他专家”的硬约束。
+- 明确 supporting voice 和 listener 可以很短，不需要分析原因、展示理论或提出问题。
+- 禁止为增加专家数量而强行插入完整心理分析。
+- 保留每位专家的人格差异，但人格只能改变对用户的关注角度和语气，不改变 Phase 1 的单向回应边界。
+
+#### Planner and output review
+
+- Planner 先判断谁是主要回应者，再决定是否需要 supporting voice 或 listener；不把所有参与专家都分配为 primary responder。
+- questioner 仍最多一位，并且不能同时让其他角色以开放式问题结尾。
+- Output review 检查专家消息是否提及其他专家或伪造专家间互动；违规内容应降级为直接回应用户的短句，无法可靠修复时丢弃该条消息。
+- supporting voice/listener 的短回复必须保留，不因长度短而被判定为低价值；但无用户指向、纯粹自我表演式的插入应被拒绝。
+
+#### Testing additions
+
+- Contract tests：验证一轮最多一个 `primary_responder`、最多一个 `questioner`，其余可为 supporting voice/listener。
+- Prompt tests：验证禁止提及其他专家、禁止假装回应专家、允许短回复的规则存在。
+- Output review tests：拒绝“我同意温尼科特”“听完他们的回应”等 peer-conversation 文本。
+- Quality fixtures：一个完整主回复 + 一个短补充 + 一个 listener 短句应通过；三个完整分析或三个同时追问应失败/降级。
+- E2E tests：验证多个专家消息仍能显示，但用户看到的是不同参与强度，而不是三段完整咨询或专家互相讨论。
+
+#### Scope guard
+
+本次不实现 `replyTo`、peer context、专家二次生成、专家间串行回应或 Phase 2 discussion loop。所有新增规则只服务于 Phase 1 同一轮的用户导向回复质量。
+
 如果后续获得提交授权，建议按以下独立边界提交：
 
 1. `feat: add party conversation contracts`
