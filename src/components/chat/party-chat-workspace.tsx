@@ -3,16 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { EXPERTS } from "@/domain/experts/registry";
 import type { BrowserMessage } from "@/domain/conversation/browser-session";
 
 import { Composer } from "./composer";
 import { Transcript } from "./transcript";
-
-const participants = EXPERTS.map((expert) => ({
-  name: expert.nameZh,
-  slug: expert.slug
-}));
 
 export function PartyChatWorkspace() {
   const [messages, setMessages] = useState<BrowserMessage[]>([]);
@@ -41,7 +35,7 @@ export function PartyChatWorkspace() {
       <img alt="" aria-hidden="true" className="figma-chatpage__art" src="/figma/talk-to-me-homepage.png" />
 
       <div className="chat-room-panel">
-        <div className="chat-room-header party-chat-header">
+        <div className="chat-room-header">
           <header className="chat-header">
             <Link aria-label="返回首页" className="chat-back-button" href="/">
               <img alt="" aria-hidden="true" src="/figma/chat-chevron-left.svg" />
@@ -61,14 +55,6 @@ export function PartyChatWorkspace() {
               </div>
             </details>
           </header>
-          <section aria-label="群聊参与者" className="party-participants">
-            <p>共同参与</p>
-            <ul>
-              {participants.map((participant) => (
-                <li key={participant.slug}>{participant.name}</li>
-              ))}
-            </ul>
-          </section>
         </div>
 
         <div className="chat-room-conversation">

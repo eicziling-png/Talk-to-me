@@ -49,7 +49,7 @@ function ExpertName({ name, slug, column }: { name: string; slug: ExpertSlug; co
 function PartyName() {
   return (
     <Link aria-label="Let's party 群聊" className="figma-homepage__expert figma-homepage__party-entry" href="/chat/party">
-      <img alt="" aria-hidden="true" className="figma-homepage__dot" src="/figma/dot-a.svg" />
+      <img alt="" aria-hidden="true" className="figma-homepage__dot" src="/figma/dot-b.svg" />
       <span>Let's party :)</span>
     </Link>
   );
@@ -75,12 +75,12 @@ export default function Home() {
           {leftColumn.map(({ name, slug }) => (
             <ExpertName column="left" key={slug} name={name} slug={slug} />
           ))}
-          <PartyName />
         </div>
         <div className="figma-homepage__expert-column">
           {rightColumn.map(({ name, slug }) => (
             <ExpertName column="right" key={slug} name={name} slug={slug} />
           ))}
+          <PartyName />
         </div>
       </nav>
 

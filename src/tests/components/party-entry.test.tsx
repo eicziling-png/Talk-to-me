@@ -9,14 +9,20 @@ afterEach(() => {
 });
 
 describe("Let's party entry", () => {
-  it("adds a party link after Yalom without removing expert links", () => {
+  it("keeps eight entries in two four-item columns with party in the right column", () => {
     render(<Home />);
 
     const navigation = screen.getByRole("navigation");
     const partyLink = within(navigation).getByRole("link", { name: /Let's party/ });
+    const columns = navigation.querySelectorAll(".figma-homepage__expert-column");
 
     expect(partyLink).toHaveAttribute("href", "/chat/party");
     expect(within(navigation).getAllByRole("link")).toHaveLength(8);
+    expect(columns).toHaveLength(2);
+    expect(within(columns[0] as HTMLElement).getAllByRole("link")).toHaveLength(4);
+    expect(within(columns[1] as HTMLElement).getAllByRole("link")).toHaveLength(4);
+    expect(columns[1]).toContainElement(partyLink);
+    expect(partyLink).toHaveClass("figma-homepage__party-entry");
   });
 
   it("renders a local-only seven-voice party room shell", async () => {
@@ -27,7 +33,7 @@ describe("Let's party entry", () => {
     expect(screen.getByText(/Let's party :\)/)).toBeInTheDocument();
     expect(screen.getByText(/七位历史心理学家/)).toBeInTheDocument();
     expect(screen.getByRole("textbox")).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(7);
+    expect(screen.queryByRole("region", { name: "群聊参与者" })).not.toBeInTheDocument();
   });
 
   it("keeps party submissions local until the multi-expert API exists", async () => {

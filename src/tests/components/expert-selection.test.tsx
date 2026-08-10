@@ -31,10 +31,10 @@ describe("home expert browsing", () => {
       "/chat/klein",
       "/chat/winnicott",
       "/chat/bion",
-      "/chat/party",
       "/chat/lacan",
       "/chat/kohut",
-      "/chat/yalom"
+      "/chat/yalom",
+      "/chat/party"
     ]);
   });
 
