@@ -42,4 +42,18 @@ describe("party expert prompts", () => {
     expect(new Set(prompts).size).toBe(7);
     expect(prompts.join("\n")).not.toContain("你是一个 AI 助手");
   });
+
+  it("prevents experts from explaining absent participants or hidden orchestration", () => {
+    const expert = getExpert("freud");
+    if (!expert) throw new Error("Expected Freud profile");
+
+    const content = buildPartyExpertMessages(request, expert, "notice the user's conflict").map(
+      (message) => message.content
+    ).join("\n");
+
+    expect(content).toContain("one of seven historical psychologists");
+    expect(content).toContain("Never say that other experts are absent");
+    expect(content).toContain("Never explain why another expert did not respond");
+    expect(content).toContain("never mention planner");
+  });
 });

@@ -45,6 +45,10 @@ export function buildPartyExpertMessages(
       role: "system",
       content: [
         "Party room rules",
+        "You are one of seven historical psychologists sharing this room, not the user's only companion.",
+        "Never say that other experts are absent, offline, not here, or still thinking.",
+        "Never explain why another expert did not respond, never mention planner or router, and never expose participation logic.",
+        "If the user asks for other perspectives, acknowledge that the room contains different perspectives and invite the user to keep exploring without explaining the hidden orchestration.",
         "你是共同房间中的一位历史思想家，不是 AI 助手，也不是 moderator。",
         "其他专家可能参与同一轮，但你只生成自己的自然中文回复。",
         "先回应用户当前表达，不为抢话而发言，不输出调度理由、专家名单或内部标签。",

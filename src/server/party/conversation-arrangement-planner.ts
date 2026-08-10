@@ -1,5 +1,6 @@
 import { PartyPlanSchema } from "@/domain/party/schema";
 import { EXPERTS } from "@/domain/experts/registry";
+import type { ExpertSlug } from "@/domain/experts/types";
 import type { PartyConversationRequest, PartyPlan } from "@/domain/party/types";
 import type { ModelProvider } from "@/server/models/types";
 
@@ -34,12 +35,28 @@ function applyParticipantPolicy(
   request: PartyConversationRequest
 ): PartyPlan {
   const participantLimit = Math.max(1, Math.min(maxParticipants, plan.participants.length));
-  const participants = plan.participants.slice(0, participantLimit).map((participant, index) => ({
+  let participants = plan.participants.slice(0, participantLimit).map((participant, index) => ({
     ...participant,
     order: index
   }));
 
-  const rotatedParticipants = shouldRotateSoleResponder(request, participants[0]?.expertSlug)
+  const targetParticipants = Math.min(maxParticipants, getParticipationTarget(request));
+  while (participants.length < targetParticipants) {
+    const candidate = chooseComplementaryCandidate(request, participants.map((participant) => participant.expertSlug));
+    if (!candidate) {
+      break;
+    }
+    participants = [
+      ...participants,
+      {
+        expertSlug: candidate,
+        focus: "从互补视角回应用户当前表达",
+        order: participants.length
+      }
+    ];
+  }
+
+  const rotatedParticipants = participants.length === 1 && shouldRotateSoleResponder(request, participants[0]?.expertSlug)
     ? [
         {
           expertSlug: EXPERTS.find((expert) => expert.slug !== participants[0]?.expertSlug)?.slug ?? participants[0]!.expertSlug,
@@ -81,6 +98,68 @@ function getLastTurnResponders(
     }
   }
   return responders;
+}
+
+function getParticipationTarget(request: PartyConversationRequest): number {
+  const userMessages = request.history.filter((message) => message.role === "user");
+  const userTurnCount = userMessages.length + 1;
+  const currentInput = request.input;
+  const conversationText = [...userMessages.map((message) => message.content), currentInput].join(" ");
+
+  const deepSignals = /(长期|关系模式|内心冲突|存在意义|不同的角度|一直以来|反复|总是)/u;
+  const emotionalSignals = /(难过|孤单|孤独|难受|害怕|焦虑|痛苦|失望|因为)/u;
+
+  if (userTurnCount >= 3 && deepSignals.test(conversationText)) {
+    return 3;
+  }
+
+  if (
+    emotionalSignals.test(conversationText) &&
+    (userTurnCount >= 3 || (userTurnCount >= 2 && /因为/u.test(currentInput)))
+  ) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function chooseComplementaryCandidate(
+  request: PartyConversationRequest,
+  selectedSlugs: ExpertSlug[]
+): ExpertSlug | null {
+  const selected = new Set(selectedSlugs);
+  const recentCounts = getRecentResponderCounts(request.history);
+  const selectedSchools = new Set(
+    selectedSlugs
+      .map((slug) => EXPERTS.find((expert) => expert.slug === slug)?.school)
+      .filter((school): school is string => Boolean(school))
+  );
+
+  return (
+    EXPERTS.filter((expert) => !selected.has(expert.slug))
+      .toSorted((left, right) => {
+        const leftScore =
+          (recentCounts.get(left.slug) ?? 0) * 10 +
+          (selectedSchools.has(left.school) ? 5 : 0);
+        const rightScore =
+          (recentCounts.get(right.slug) ?? 0) * 10 +
+          (selectedSchools.has(right.school) ? 5 : 0);
+        return leftScore - rightScore;
+      })[0]?.slug ?? null
+  );
+}
+
+function getRecentResponderCounts(
+  history: PartyConversationRequest["history"]
+): Map<ExpertSlug, number> {
+  const counts = new Map<ExpertSlug, number>();
+  for (const message of history) {
+    if (message.role !== "expert") {
+      continue;
+    }
+    counts.set(message.expertSlug, (counts.get(message.expertSlug) ?? 0) + 1);
+  }
+  return counts;
 }
 
 function fallbackPlan(): PartyPlan {

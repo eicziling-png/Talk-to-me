@@ -147,4 +147,53 @@ describe("conversation arrangement planner", () => {
 
     expect(captured.map((message) => message.content).join("\n")).toContain("sole responder");
   });
+
+  it("adds a complementary participant when the conversation reaches clear emotional depth", async () => {
+    const plan = await planConversationArrangement(
+      {
+        ...request,
+        input: "我最近很难过，因为我总是在关系里退缩，也不知道该怎么办。",
+        history: [
+          { role: "user", content: "我最近很难过" },
+          { role: "expert", expertSlug: "winnicott", content: "先让这份感受有一个可以停留的地方。" },
+          { role: "user", content: "我总觉得自己在关系里会消失" },
+          { role: "expert", expertSlug: "winnicott", content: "这像是一种熟悉的退缩。" }
+        ]
+      },
+      {
+        modelProvider: providerFromJson({
+          participants: [{ expertSlug: "winnicott", focus: "承接情绪", order: 0 }],
+          messageLimit: 1
+        })
+      }
+    );
+
+    expect(plan.participants.length).toBeGreaterThanOrEqual(2);
+    expect(plan.participants.map((participant) => participant.expertSlug)).toContain("winnicott");
+    expect(new Set(plan.participants.map((participant) => participant.expertSlug)).size).toBeGreaterThan(1);
+  });
+
+  it("does not keep alternating the same two sole responders across deep turns", async () => {
+    const plan = await planConversationArrangement(
+      {
+        ...request,
+        input: "我想把这些长期的关系模式说清楚，也想听听不同的角度。",
+        history: [
+          { role: "user", content: "我最近很难过，因为我总是在关系里退缩" },
+          { role: "expert", expertSlug: "freud", content: "也许可以留意反复出现的愿望。" },
+          { role: "user", content: "我又回到了同样的关系模式" },
+          { role: "expert", expertSlug: "winnicott", content: "我们可以看看这份经验如何被承受。" }
+        ]
+      },
+      {
+        modelProvider: providerFromJson({
+          participants: [{ expertSlug: "freud", focus: "重复的关系模式", order: 0 }],
+          messageLimit: 1
+        })
+      }
+    );
+
+    expect(plan.participants.length).toBeGreaterThanOrEqual(2);
+    expect(plan.participants.map((participant) => participant.expertSlug)).not.toEqual(["freud"]);
+  });
 });
