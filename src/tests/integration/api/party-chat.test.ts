@@ -85,7 +85,9 @@ describe("POST /api/chat/party", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/event-stream");
     expect(text).toContain('event: plan');
-    expect(text).toContain('"selectedExpertSlugs":["winnicott","yalom"]');
+    expect(text).toContain('data: {"type":"plan"}');
+    expect(text).not.toContain("selectedExpertSlugs");
+    expect(text).not.toContain("messageLimit");
     expect(text).toContain('event: expert_delta');
     expect(text).toContain('event: turn_done');
     expect(text).toContain('event: done');

@@ -39,6 +39,8 @@ export function buildConversationArrangementMessages(
         "你负责判断哪些声音有独特贡献、安排阅读顺序，并保留未来多轮参与和专家回应的扩展空间。",
         "当前阶段只输出 JSON，不输出任何面向用户的回复，不输出解释、评分或完整分析。",
         "参与人数由当前运行策略限制；不要为了填满人数而选择没有独特贡献的专家。",
+        "If the previous turn had one sole responder, do not make that same expert the sole responder again on the next turn. Prefer a relevant voice that has been absent or underrepresented recently, while keeping relevance primary and allowing a natural one-expert turn when no suitable alternative exists.",
+        "The participation diversity rule is internal arrangement logic; never explain it to the user or include it in the output JSON.",
         "JSON shape: { participants: [{ expertSlug, focus, order }], messageLimit }",
         "focus 只能描述专家本轮可能贡献的观察角度，不能写诊断结论。",
         "只使用下面目录中的 expert slug。",

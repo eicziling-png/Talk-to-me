@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在不改变现有单专家聊天的前提下，为 `/chat/party` 实现 Phase 1：安全前置、最多选择 3 位专家、有限 `plan` SSE 事件、首轮并行生成和有序展示。
+**Goal:** 在不改变现有单专家聊天的前提下，为 `/chat/party` 实现 Phase 1：安全前置、最多选择 3 位专家、隐藏 arrangement plan、首轮并行生成和有序展示。
 
 **Architecture:** 群聊使用独立的 domain contract、conversation arrangement planner、prompt builder、chat service 和 API route。它复用现有专家 registry、voice profiles、safety engine、model provider、telemetry 依赖和 `Composer`，但不复用单专家 `Transcript` 的单一专家数据模型，也不修改 `/api/chat`、`ChatWorkspace` 或单专家 prompt 链路。Phase 1 不实现专家之间的回应；Phase 2 另行设计、评审和实现。
 
@@ -12,7 +12,7 @@
 
 - 群聊只开放 `self-reflection` 一个默认模式，前端不显示模式选择器。
 - Phase 1 的运行策略最多选择 3 位专家；domain contract 必须允许未来在安全上限内动态调整参与人数，不把 3 固定编码为长期协议限制。
-- 前端必须收到有限 `plan` 事件，但不得收到未发言专家名单、参与理由、评分、完整 prompt 或 provider diagnostics。
+- planner 必须保持隐藏；前端不得显示参与人数、选中或未参与专家、参与理由、评分、概率、完整 prompt 或 provider diagnostics。若协议保留 `plan` 事件，它只能作为不可渲染的内部事件。
 - 首轮专家调用可以并行，但必须按 planner 顺序展示，不能按模型完成速度乱序刷屏。
 - S2/S3 在安全判断后直接返回现代安全支持，不调用 planner 或专家模型。
 - 群聊保持浏览器内存会话；不使用 localStorage、sessionStorage、IndexedDB、Cookie、数据库、向量库、队列或多代理框架。
@@ -66,7 +66,7 @@ Party UI
        -> S2/S3: modern safety SSE, no model calls
        -> S0/S1: planner model call
   -> validate PartyPlanSchema and enforce max 3
-  -> emit limited plan event
+  -> keep arrangement plan internal; emit only actual expert messages
   -> start selected expert model streams in parallel
   -> review each expert output while streaming
   -> buffer by planned order and emit expert_start/delta/done
@@ -215,7 +215,7 @@ Phase 1 不创建 `replyToExpertSlug` 任务，不做第二轮专家回应。所
 1. Planner 读取当前输入、近期上下文和七位轻量专家资料。
 2. Planner 输出候选参与者和顺序。
 3. 服务端 schema 校验并强制 cap 到最多 3 位。
-4. Route 输出有限 `plan` 事件：只包含 selected expert slugs 和 message limit，不包含未选择专家、reason 或 score。
+4. Arrangement plan 只在服务端使用；客户端不得从 `plan` 得到人数、selected expert slugs、message limit、未选择专家、reason 或 score。客户端只接收并渲染实际出现的 expert events。
 
 ### Generation
 
@@ -327,7 +327,7 @@ Steps:
 
 Steps:
 
-- [x] 写组件失败测试，覆盖 plan visibility、专家中文名、色彩 marker、消息增量、ordered lanes、loading、stop、retry、clear 和 empty submit。
+- [x] 写组件失败测试，覆盖实际消息可见性、专家中文名、色彩 marker、消息增量、ordered lanes、loading、stop、retry、clear 和 empty submit；不允许渲染参与人数或 planner 信息。
 - [x] 写回归测试，确认 party workspace 不调用 `/api/chat`，Composer 仍可发送，单专家 `ChatWorkspace` import/行为不变。
 - [x] 实现 `PartyTranscript`，只显示中文名、色彩标记、正文、时间/状态，不显示时代信息或诗性副标题。
 - [x] 实现 party SSE parser 和 workspace state updates；在 workspace 请求中固定 `mode: "self-reflection"`；复用 `Composer`，不复制其输入逻辑。
@@ -344,10 +344,41 @@ Steps:
 Steps:
 
 - [x] 使用 Playwright route interception 为 `/api/chat/party` 提供确定性 plan/expert events，避免 E2E 依赖真实模型 provider。
-- [x] 覆盖首页 party link → `/chat/party`、固定 self-reflection UI、有限 plan、多个 expert lanes、顺序展示、停止、清空和刷新不恢复。
+- [x] 覆盖首页 party link → `/chat/party`、固定 self-reflection UI、多个 expert lanes、顺序展示、停止、清空和刷新不恢复；后续调整需补充隐藏 plan 验证。
 - [x] 覆盖 mobile party layout 中 composer、expert names 和 message lanes 不溢出。
 - [x] 运行 focused party E2E；确认新测试只依赖 party route，不改变旧 E2E。
 - [x] 单独运行 `pnpm test`、`pnpm lint` 和 `pnpm build`，记录既有 E2E 断言与本次新增 party E2E 的区别。
+
+### Post-Phase-1 adjustment: hidden planner and multi-turn participation diversity
+
+这项调整来自 Phase 1 人工体验反馈，属于后续实现任务；在用户确认设计前不修改代码。它不改变 Phase 1 的“首轮并行、最多 3 位专家、无专家间回应”边界，也不把最多 3 位写死为长期 contract 限制。
+
+**目标：** 让用户只感受到一个可能由不同声音加入的共同房间，而不是连续多轮只与同一位专家聊天。
+
+**设计约束：**
+
+- planner 继续定义为 conversation arrangement planner，但完全隐藏在服务端；不得在 UI 显示“本轮有 X 位专家回应”、参与人数、专家名单、未参与者、选择原因、评分、概率或 planner 状态。
+- 前端只渲染实际出现的 `expert_start`、`expert_delta`、`expert_done` 消息；如保留 `plan` SSE 事件，它不得驱动可见 UI，也不应向公开客户端暴露 selected slugs 或 message limit。
+- 相关性仍是首要选择依据；不强制每轮多人回复，也不为了轮换而加入不相关专家。
+- 同一专家不得连续两轮成为唯一回应者。若上一轮只有一位专家回应，下一轮对该专家作为唯一回应者施加强惩罚，并提高近期未出现或参与较少专家的参与概率。
+- 允许在缺乏足够替代视角、或安全判断要求时保留同一专家，但这是内部降级条件，不能成为默认路径。
+- 保留 Phase 1 不实现专家之间回应、peer context 或第二轮专家生成。
+
+**计划修改范围（待确认后执行）：**
+
+- `PartyConversationRequest` / browser session 增加受限的近期参与元数据；记录最近若干用户轮次的实际回应者、是否为唯一回应者和有限计数，保持可扩展以支持未来动态参与人数。
+- `build-planner-messages` 将近期参与元数据作为编排输入；不把 planner reason、score 或概率发送到客户端，也不把完整内部调度历史放入 prompt。
+- `conversation-arrangement-planner` 增加轮换策略：相关性权重、连续唯一回应惩罚、低频专家奖励和同学派重复约束；具体权重保持可调，不改变 Phase 1 runtime cap。
+- `party-chat-workspace` / `PartyTranscript` 删除参与人数提示和 plan 可见状态，只保留实际专家消息及其生成状态。
+
+**新增验证：**
+
+- 两轮连续输入时，同一专家不能连续成为唯一回应者；
+- 上一轮只有一位专家时，下一轮在存在相关替代专家的情况下优先产生不同声音；
+- 没有足够相关替代专家时仍可自然地只有一位专家回应，不强行凑数；
+- 多轮窗口不会让七位专家退化为同一种通用心理咨询语气；
+- 组件和 E2E 不出现参与人数、未参与专家、选择原因或 planner 信息，只出现实际专家消息；
+- 单专家聊天、Homepage、现有专家页面和 `/api/chat` 的测试与实现保持不变。
 
 ### Task 7: Phase 1 review gate
 
@@ -370,16 +401,23 @@ Steps:
 ### Unit tests
 
 - Party schema：固定 mode、输入长度、history 长度、slug、cap、event payload 和未知字段。
-- Browser session：消息追加、expert identity、plan 状态、停止、失败、清空和 refresh-equivalent new session。
+- Browser session：消息追加、expert identity、内部 plan 不可见、停止、失败、清空和 refresh-equivalent new session。
 - Planner：合法/非法 JSON、重复、未知专家、超过 cap、fallback、reason 不外泄。
 - Prompt builder：Safety first、Conversation Engine、用户 data delimiters、独立 persona/voice profile、无普通 AI assistant 语言。
 - Personality differentiation：七位专家分别通过 hallmark concept、语言气质、理论边界和 forbidden-pattern checks；同一用户输入不能让七位专家退化为相同的安慰、诊断或通用建议模板。
 - Party service：并行启动、顺序输出、单专家失败、全失败、abort、reviewOutput 和 S2/S3 no-model path。
 
+### Multi-turn participation tests
+
+- 使用多轮 planner fixtures 验证同一专家不能连续两轮成为唯一回应者。
+- 验证上一轮只有一位专家回应时，下一轮会提高其他相关专家的参与机会，同时仍以相关性为首要依据。
+- 验证没有足够相关替代专家时允许自然的单专家回应，不强制增加人数。
+- 验证近期参与窗口只传递受限元数据，且不把 planner reason、score 或 probability 暴露给客户端。
+
 ### Component tests
 
 - Party page 保留标题、返回首页、菜单和 composer。
-- `plan` 只渲染有限的 selected experts/message limit，不渲染未发言专家或内部 reason。
+- 不渲染 `plan`、参与人数、selected experts/message limit、未发言专家、选择原因、评分或概率；只渲染实际到达的专家消息。
 - 每条 expert message 显示中文名、色彩标记、正文和状态，不显示 era/poetic subtitle。
 - 首轮最多三条 expert messages；不显示七人同时 typing indicator。
 - 单专家 `ChatWorkspace` 和 `Transcript` 不被 party state 侵入。
@@ -393,7 +431,7 @@ Steps:
 ### E2E tests
 
 - 使用 Playwright route interception，不依赖线上模型配置。
-- 覆盖 party entry、party route、plan event、多专家消息、顺序展示、停止、重试、清空、刷新和移动端布局。
+- 覆盖 party entry、party route、实际多专家消息、顺序展示、停止、重试、清空、刷新和移动端布局；确认不存在参与人数、未参与专家或 planner 信息。
 - 不修改现有单专家 E2E；现有旧断言若仍失败，应作为独立测试维护问题处理，不在本功能计划中顺手修复。
 
 ### Verification commands

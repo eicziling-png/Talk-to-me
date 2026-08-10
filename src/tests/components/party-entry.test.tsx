@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PartyChatPage from "@/app/chat/party/page";
@@ -39,7 +39,7 @@ describe("Let's party entry", () => {
   it("sends party submissions only to the isolated multi-expert API", async () => {
     const fetchSpy = vi.fn(async () =>
       new Response(
-        'event: plan\ndata: {"type":"plan","selectedExpertSlugs":["winnicott"],"messageLimit":1}\n\n' +
+        'event: plan\ndata: {"type":"plan"}\n\n' +
           'event: done\ndata: {"type":"done"}\n\n',
         { headers: { "content-type": "text/event-stream" } }
       )
@@ -52,7 +52,7 @@ describe("Let's party entry", () => {
     fireEvent.click(screen.getByRole("button", { name: /送出/ }));
 
     expect(screen.getByText("大家好")).toBeInTheDocument();
-    await screen.findByText(/本轮有 1 位专家回应/);
+    await waitFor(() => expect(screen.queryByText(/本轮有/)).not.toBeInTheDocument());
     expect(fetchSpy).toHaveBeenCalledWith(
       "/api/chat/party",
       expect.objectContaining({ method: "POST" })

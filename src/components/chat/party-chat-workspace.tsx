@@ -10,7 +10,6 @@ import {
 } from "@/domain/party/browser-session";
 import type {
   PartyConversationRequest,
-  PartyPlan,
   PartySession,
   PartyStreamEvent
 } from "@/domain/party/types";
@@ -112,12 +111,6 @@ export function PartyChatWorkspace() {
   function applyStreamEvent(event: PartyStreamEvent): void {
     switch (event.type) {
       case "plan":
-        setSession((current) =>
-          partySessionReducer(current, {
-            type: "plan",
-            plan: makePlan(event)
-          })
-        );
         return;
       case "expert_start":
         setSession((current) =>
@@ -206,9 +199,6 @@ export function PartyChatWorkspace() {
         </div>
 
         <div className="chat-room-conversation">
-          {session.activePlan ? (
-            <p className="party-plan-note">本轮有 {session.activePlan.participants.length} 位专家回应。</p>
-          ) : null}
           <PartyTranscript
             messages={session.messages}
             safetyMessage={safetyMessage}
@@ -236,17 +226,6 @@ export function PartyChatWorkspace() {
       </div>
     </main>
   );
-}
-
-function makePlan(event: Extract<PartyStreamEvent, { type: "plan" }>): PartyPlan {
-  return {
-    participants: event.selectedExpertSlugs.map((expertSlug, order) => ({
-      expertSlug,
-      focus: "本轮回应",
-      order
-    })),
-    messageLimit: event.messageLimit
-  };
 }
 
 async function* readPartySseEvents(response: Response): AsyncIterable<PartyStreamEvent> {

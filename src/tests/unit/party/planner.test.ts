@@ -78,4 +78,51 @@ describe("conversation arrangement planner", () => {
 
     expect(captured.every((message) => message.role === "system" || message.role === "user")).toBe(true);
   });
+
+  it("rotates away from the previous sole responder on the next turn", async () => {
+    const plan = await planConversationArrangement(
+      {
+        ...request,
+        history: [
+          { role: "user", content: "我好难过" },
+          { role: "expert", expertSlug: "winnicott", content: "我先陪你停留在这里。" }
+        ]
+      },
+      {
+        modelProvider: providerFromJson({
+          participants: [{ expertSlug: "winnicott", focus: "继续陪伴", order: 0 }],
+          messageLimit: 1
+        })
+      }
+    );
+
+    expect(plan.participants).toHaveLength(1);
+    expect(plan.participants[0]?.expertSlug).not.toBe("winnicott");
+  });
+
+  it("includes hidden multi-turn participation guidance in the planner prompt", async () => {
+    let captured: ModelMessage[] = [];
+    await planConversationArrangement(
+      {
+        ...request,
+        history: [
+          { role: "user", content: "我好孤单" },
+          { role: "expert", expertSlug: "winnicott", content: "我听见你的孤单。" }
+        ]
+      },
+      {
+        modelProvider: providerFromJson(
+          {
+            participants: [{ expertSlug: "yalom", focus: "此刻的孤单", order: 0 }],
+            messageLimit: 1
+          },
+          (messages) => {
+            captured = messages;
+          }
+        )
+      }
+    );
+
+    expect(captured.map((message) => message.content).join("\n")).toContain("sole responder");
+  });
 });

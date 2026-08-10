@@ -34,11 +34,7 @@ export async function* runPartyChat(
 
   const plan = await getArrangementPlan(request, dependencies);
   const parsedPlan = PartyPlanSchema.parse(plan);
-  yield {
-    type: "plan",
-    selectedExpertSlugs: parsedPlan.participants.map((participant) => participant.expertSlug),
-    messageLimit: parsedPlan.messageLimit
-  };
+  yield { type: "plan" };
 
   const results = await Promise.all(
     parsedPlan.participants.map((participant) =>

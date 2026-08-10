@@ -51,6 +51,18 @@ describe("party schemas", () => {
     ).toThrow();
   });
 
+  it("keeps planner stream events opaque to the browser", () => {
+    expect(PartyStreamEventSchema.parse({ type: "plan" })).toEqual({ type: "plan" });
+
+    expect(() =>
+      PartyStreamEventSchema.parse({
+        type: "plan",
+        selectedExpertSlugs: ["winnicott"],
+        messageLimit: 1
+      })
+    ).toThrow();
+  });
+
   it("rejects empty user input and unsupported modes", () => {
     expect(() =>
       PartyConversationRequestSchema.parse({

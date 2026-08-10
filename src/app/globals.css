@@ -2293,15 +2293,6 @@ button {
   white-space: normal;
 }
 
-.party-chatpage .party-plan-note {
-  margin: 0;
-  padding: 18px 0 0;
-  color: rgba(27, 42, 74, 0.58);
-  font-family: var(--chat-mixed-font);
-  font-size: 0.82rem;
-  text-align: center;
-}
-
 .party-chatpage .party-transcript {
   gap: 18px;
 }

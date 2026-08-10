@@ -10,7 +10,6 @@ describe("party browser session", () => {
     expect(createPartySession()).toEqual({
       mode: "self-reflection",
       messages: [],
-      activePlan: null,
       status: "idle",
       failedInput: null
     });

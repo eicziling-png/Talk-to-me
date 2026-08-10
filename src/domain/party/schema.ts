@@ -103,9 +103,7 @@ const expertDeltaEventSchema = z
 export const PartyStreamEventSchema = z.discriminatedUnion("type", [
   z
     .object({
-      type: z.literal("plan"),
-      selectedExpertSlugs: z.array(ExpertSlugSchema).min(1).max(MAX_PARTY_EXPERTS),
-      messageLimit: z.number().int().min(1).max(MAX_PARTY_EXPERTS)
+      type: z.literal("plan")
     })
     .strict(),
   expertStartEventSchema,

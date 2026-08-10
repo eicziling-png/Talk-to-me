@@ -2,14 +2,12 @@ import type { ExpertSlug } from "@/domain/experts/types";
 
 import type {
   PartyBrowserMessage,
-  PartyPlan,
   PartySession,
   PartySessionStatus
 } from "./types";
 
 export type PartySessionAction =
   | { type: "status"; status: PartySessionStatus }
-  | { type: "plan"; plan: PartyPlan }
   | { type: "user_message"; id: string; content: string; createdAt?: number }
   | { type: "expert_started"; id: string; expertSlug: ExpertSlug; createdAt?: number }
   | { type: "expert_chunk"; id: string; text: string }
@@ -22,7 +20,6 @@ export function createPartySession(): PartySession {
   return {
     mode: "self-reflection",
     messages: [],
-    activePlan: null,
     status: "idle",
     failedInput: null
   };
@@ -35,8 +32,6 @@ export function partySessionReducer(
   switch (action.type) {
     case "status":
       return { ...session, status: action.status };
-    case "plan":
-      return { ...session, activePlan: action.plan };
     case "user_message":
       return {
         ...session,

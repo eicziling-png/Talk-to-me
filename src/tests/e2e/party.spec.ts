@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const partyEvents = [
-  { type: "plan", selectedExpertSlugs: ["freud", "winnicott"], messageLimit: 2 },
+  { type: "plan" },
   { type: "expert_start", id: "freud-e2e", expertSlug: "freud", order: 0 },
   { type: "expert_delta", id: "freud-e2e", expertSlug: "freud", text: "先留意这份愿望。" },
   { type: "expert_done", id: "freud-e2e", expertSlug: "freud", complete: true },
@@ -40,7 +40,7 @@ test("party link opens the isolated room and completes an ordered multi-expert t
   await page.getByRole("textbox").fill("我想和你们谈谈我的退缩。");
   await page.getByRole("button", { name: /送出/ }).click();
 
-  await expect(page.getByText(/本轮有 2 位专家回应/)).toBeVisible();
+  await expect(page.getByText(/本轮有/)).toHaveCount(0);
   await expect(page.getByText("先留意这份愿望。")).toBeVisible();
   await expect(page.getByText("先让感受有一个空间。")).toBeVisible();
   await expect(page.locator("article.party-message--expert")).toHaveCount(2);

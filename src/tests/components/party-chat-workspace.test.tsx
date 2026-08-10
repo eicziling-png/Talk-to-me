@@ -26,10 +26,10 @@ afterEach(() => {
 });
 
 describe("PartyChatWorkspace", () => {
-  it("sends the fixed self-reflection party request and renders a limited plan with ordered lanes", async () => {
+  it("sends the fixed self-reflection party request and renders only actual expert messages", async () => {
     const fetchMock = vi.fn(async () =>
       partySseResponse([
-        { type: "plan", selectedExpertSlugs: ["freud", "winnicott"], messageLimit: 2 },
+        { type: "plan" },
         { type: "expert_start", id: "freud-1", expertSlug: "freud", order: 0 },
         { type: "expert_delta", id: "freud-1", expertSlug: "freud", text: "先留意这份愿望。" },
         { type: "expert_done", id: "freud-1", expertSlug: "freud", complete: true },
@@ -46,7 +46,7 @@ describe("PartyChatWorkspace", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "我想和你们谈谈我的退缩。" } });
     fireEvent.click(screen.getByRole("button", { name: /送出/ }));
 
-    await screen.findByText(/本轮有 2 位专家回应/);
+    await waitFor(() => expect(screen.queryByText(/本轮有/)).not.toBeInTheDocument());
     await screen.findByText("先留意这份愿望。");
     await screen.findByText("先让感受有一个空间。");
     expect(screen.getByText("西格蒙德·弗洛伊德")).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe("PartyChatWorkspace", () => {
       .mockResolvedValueOnce(new Response("failed", { status: 500 }))
       .mockResolvedValueOnce(
         partySseResponse([
-          { type: "plan", selectedExpertSlugs: ["yalom"], messageLimit: 1 },
+          { type: "plan" },
           { type: "expert_start", id: "yalom-1", expertSlug: "yalom", order: 0 },
           { type: "expert_delta", id: "yalom-1", expertSlug: "yalom", text: "我们可以一起停留在这个问题上。" },
           { type: "expert_done", id: "yalom-1", expertSlug: "yalom", complete: true },

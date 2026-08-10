@@ -35,8 +35,6 @@ export type PartyPlan = {
 export type PartyStreamEvent =
   | {
       type: "plan";
-      selectedExpertSlugs: ExpertSlug[];
-      messageLimit: number;
     }
   | {
       type: "expert_start";
@@ -87,7 +85,6 @@ export type PartySessionStatus = "idle" | "streaming" | "failed" | "interrupted"
 export type PartySession = {
   mode: PartyConversationMode;
   messages: PartyBrowserMessage[];
-  activePlan: PartyPlan | null;
   status: PartySessionStatus;
   failedInput: string | null;
 };
