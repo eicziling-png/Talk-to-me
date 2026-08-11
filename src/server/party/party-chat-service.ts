@@ -6,7 +6,9 @@ import { PartyPlanSchema } from "@/domain/party/schema";
 import type {
   PartyConversationRequest,
   PartyConversationRole,
+  PartyOutputBudget,
   PartyPlan,
+  PartyPerspectiveSupplement,
   PartyResponseRole,
   PartyStreamEvent
 } from "@/domain/party/types";
@@ -42,8 +44,12 @@ export async function* runPartyChat(
   const parsedPlan = PartyPlanSchema.parse(plan);
   yield { type: "plan" };
 
+  const supplement = parsedPlan.supplementation;
+  const initialParticipants = parsedPlan.participants.filter(
+    (participant) => participant.expertSlug !== supplement?.expertSlug
+  );
   const results = await Promise.all(
-    parsedPlan.participants.map((participant) =>
+    initialParticipants.map((participant) =>
       generateExpertResponse(
         request,
         participant.expertSlug,
@@ -51,10 +57,40 @@ export async function* runPartyChat(
         participant.role ?? "reflection",
         participant.responseRole ?? "primary_responder",
         participant.order,
-        dependencies
+        dependencies,
+        { outputBudget: participant.responseRole === "listener" ? "listener" : "primary" }
       )
     )
   );
+
+  if (supplement) {
+    const referenceResult = results.find(
+      (result) => result.expertSlug === supplement.referenceExpert && !result.errorCode
+    );
+    if (referenceResult) {
+      const supplementParticipant = parsedPlan.participants.find(
+        (participant) => participant.expertSlug === supplement.expertSlug
+      );
+      if (supplementParticipant) {
+        results.push(
+          await generateExpertResponse(
+            request,
+            supplementParticipant.expertSlug,
+            supplementParticipant.focus,
+            supplementParticipant.role ?? "perspective",
+            supplementParticipant.responseRole ?? "supporting_voice",
+            parsedPlan.participants.length,
+            dependencies,
+            {
+              referenceContext: referenceResult.chunks.join(""),
+              outputBudget: supplement.outputBudget,
+              supplementationRole: supplement.supplementationRole
+            }
+          )
+        );
+      }
+    }
+  }
 
   let expertMessageCount = 0;
   for (const result of results.sort((left, right) => left.order - right.order)) {
@@ -118,7 +154,8 @@ type ExpertGenerationResult = {
 export function sanitizePartyExpertText(
   text: string,
   role: PartyConversationRole,
-  responseRole: PartyResponseRole = "primary_responder"
+  responseRole: PartyResponseRole = "primary_responder",
+  outputBudget: PartyOutputBudget = "primary"
 ): string | null {
   if (/(我(?:也)?同意.*(?:专家|弗洛伊德|温尼科特|拉康|科胡特|雅洛姆|克莱因|比昂|他们)|刚才.*专家|听完他们|他们的回应|I agree with|another expert|after hearing them|their response)/iu.test(text)) {
     return null;
@@ -129,7 +166,8 @@ export function sanitizePartyExpertText(
   }
 
   const withoutTrailingQuestion = text.replace(/\s*[^.!?。！？]*[?？]\s*$/u, "").trim();
-  return withoutTrailingQuestion || text.replace(/[?？]\s*$/u, "。").trim();
+  const sanitized = withoutTrailingQuestion || text.replace(/[?？]\s*$/u, "。").trim();
+  return outputBudget === "supporting" && sanitized.length > 360 ? null : sanitized;
 }
 
 async function generateExpertResponse(
@@ -139,7 +177,12 @@ async function generateExpertResponse(
   role: PartyConversationRole,
   responseRole: PartyResponseRole,
   order: number,
-  dependencies: PartyChatDependencies
+  dependencies: PartyChatDependencies,
+  options: {
+    referenceContext?: string;
+    outputBudget?: PartyOutputBudget;
+    supplementationRole?: PartyPerspectiveSupplement["supplementationRole"];
+  } = {}
 ): Promise<ExpertGenerationResult> {
   const id = `party-${expertSlug}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const expert = getExpert(expertSlug);
@@ -148,7 +191,7 @@ async function generateExpertResponse(
   }
 
   try {
-    const messages = buildPartyExpertMessages(request, expert, focus, role, responseRole);
+    const messages = buildPartyExpertMessages(request, expert, focus, role, responseRole, options);
     const chunks: string[] = [];
     let finalText = "";
     for await (const chunk of dependencies.modelProvider.stream(messages, dependencies.signal)) {
@@ -162,7 +205,7 @@ async function generateExpertResponse(
       finalText = nextText;
       chunks.push(chunk.text);
     }
-    const sanitizedText = sanitizePartyExpertText(finalText, role, responseRole);
+    const sanitizedText = sanitizePartyExpertText(finalText, role, responseRole, options.outputBudget);
     if (!sanitizedText) {
       return { id, expertSlug, order, chunks: [], errorCode: "expert_output_rejected" };
     }

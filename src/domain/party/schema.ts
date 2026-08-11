@@ -13,6 +13,15 @@ const MAX_PARTY_FOCUS_CHARS = 240;
 const MAX_PARTY_EVENT_TEXT_CHARS = 8_000;
 const partyRoleSchema = z.enum(["reflection", "perspective", "support", "question"]);
 const partyResponseRoleSchema = z.enum(["primary_responder", "supporting_voice", "listener", "questioner"]);
+const partyPerspectiveSupplementSchema = z
+  .object({
+    expertSlug: ExpertSlugSchema,
+    supplementationRole: z.literal("integrator"),
+    referenceExpert: ExpertSlugSchema,
+    outputBudget: z.literal("supporting"),
+    layer: z.literal(1)
+  })
+  .strict();
 
 const partyMessageSchema = z.discriminatedUnion("role", [
   z
@@ -56,7 +65,8 @@ export const PartyConversationRequestSchema = z
 export const PartyPlanSchema = z
   .object({
     participants: z.array(partyParticipantPlanSchema).min(1).max(MAX_PARTY_EXPERTS),
-    messageLimit: z.number().int().min(1).max(MAX_PARTY_EXPERTS)
+    messageLimit: z.number().int().min(1).max(MAX_PARTY_EXPERTS),
+    supplementation: partyPerspectiveSupplementSchema.optional()
   })
   .strict()
   .superRefine((plan, context) => {
@@ -104,6 +114,31 @@ export const PartyPlanSchema = z
         message: "Party plans can assign primary_responder to at most one expert.",
         path: ["participants"]
       });
+    }
+
+    if (plan.supplementation) {
+      const participantSlugs = new Set(slugs);
+      if (!participantSlugs.has(plan.supplementation.expertSlug)) {
+        context.addIssue({
+          code: "custom",
+          message: "Perspective supplement expert must be a participant.",
+          path: ["supplementation", "expertSlug"]
+        });
+      }
+      if (!participantSlugs.has(plan.supplementation.referenceExpert)) {
+        context.addIssue({
+          code: "custom",
+          message: "Perspective supplement reference must be a participant.",
+          path: ["supplementation", "referenceExpert"]
+        });
+      }
+      if (plan.supplementation.expertSlug === plan.supplementation.referenceExpert) {
+        context.addIssue({
+          code: "custom",
+          message: "Perspective supplement cannot reference itself.",
+          path: ["supplementation", "referenceExpert"]
+        });
+      }
     }
   }) satisfies z.ZodType<PartyPlan>;
 

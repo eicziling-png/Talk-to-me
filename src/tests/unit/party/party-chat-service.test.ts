@@ -18,7 +18,11 @@ async function collect<T>(items: AsyncIterable<T>): Promise<T[]> {
 
 function providerByExpert(
   responses: Record<string, string[]>,
-  options: { fail?: Set<string>; onStart?: (expertSlug: string) => void } = {}
+  options: {
+    fail?: Set<string>;
+    onStart?: (expertSlug: string) => void;
+    onMessages?: (expertSlug: string, messages: ModelMessage[]) => void;
+  } = {}
 ): ModelProvider {
   return {
     async *stream(messages: ModelMessage[]) {
@@ -34,6 +38,7 @@ function providerByExpert(
       };
       const expertSlug = Object.keys(responses).find((slug) => identity.includes(names[slug] ?? "")) ?? "unknown";
       options.onStart?.(expertSlug);
+      options.onMessages?.(expertSlug, messages);
       if (options.fail?.has(expertSlug)) throw new Error(`failed: ${expertSlug}`);
       for (const text of responses[expertSlug] ?? []) yield { text };
     }
@@ -183,5 +188,66 @@ describe("party chat service", () => {
 
     expect(events.some((event) => event.type === "expert_delta" && event.expertSlug === "freud")).toBe(true);
     expect(events.some((event) => event.type === "expert_delta" && event.expertSlug === "winnicott")).toBe(false);
+  });
+
+  it("generates one perspective supplement after the primary response", async () => {
+    const started: string[] = [];
+    const captured: Record<string, string> = {};
+    const supplementationPlan = {
+      ...plan,
+      supplementation: {
+        expertSlug: "winnicott" as const,
+        supplementationRole: "integrator" as const,
+        referenceExpert: "freud" as const,
+        outputBudget: "supporting" as const,
+        layer: 1 as const
+      }
+    };
+    const events = await collect(
+      runPartyChat(request, {
+        planner: async () => supplementationPlan,
+        modelProvider: providerByExpert(
+          { freud: ["先留意这份重复。"], winnicott: ["也可以让这份经验有一点空间。"] },
+          {
+            onStart: (slug) => started.push(slug),
+            onMessages: (slug, messages) => {
+              captured[slug] = messages.map((message) => message.content).join("\n");
+            }
+          }
+        )
+      })
+    );
+
+    expect(started).toEqual(["freud", "winnicott"]);
+    expect(captured.winnicott).toContain("<reference_context>");
+    expect(captured.winnicott).toContain("先留意这份重复。");
+    expect(events.filter((event) => event.type === "expert_delta")).toHaveLength(2);
+    expect(events.some((event) => (event.type as string) === "peer_response")).toBe(false);
+  });
+
+  it("keeps the primary response when the perspective supplement fails", async () => {
+    const supplementationPlan = {
+      ...plan,
+      supplementation: {
+        expertSlug: "winnicott" as const,
+        supplementationRole: "integrator" as const,
+        referenceExpert: "freud" as const,
+        outputBudget: "supporting" as const,
+        layer: 1 as const
+      }
+    };
+    const events = await collect(
+      runPartyChat(request, {
+        planner: async () => supplementationPlan,
+        modelProvider: providerByExpert(
+          { freud: ["主要回应仍然在这里。"], winnicott: ["不会显示。"] },
+          { fail: new Set(["winnicott"]) }
+        )
+      })
+    );
+
+    expect(events.some((event) => event.type === "expert_delta" && event.expertSlug === "freud")).toBe(true);
+    expect(events.some((event) => event.type === "expert_delta" && event.expertSlug === "winnicott")).toBe(false);
+    expect(events.some((event) => event.type === "error" && event.code === "expert_failed")).toBe(true);
   });
 });

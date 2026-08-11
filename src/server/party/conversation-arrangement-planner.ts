@@ -11,6 +11,7 @@ import type {
 import type { ModelProvider } from "@/server/models/types";
 
 import { buildConversationArrangementMessages } from "./build-planner-messages";
+import { buildPerspectiveSupplementPlan } from "./party-perspective-supplementation";
 
 export const PHASE1_MAX_PARTICIPANTS = 3;
 
@@ -80,10 +81,13 @@ function applyParticipantPolicy(
       ]
     : participants;
 
-  return PartyPlanSchema.parse({
+  const arrangedPlan = PartyPlanSchema.parse({
     participants: assignConversationRoles(rotatedParticipants),
     messageLimit: Math.max(rotatedParticipants.length, Math.min(plan.messageLimit, maxParticipants))
   });
+
+  const supplementation = buildPerspectiveSupplementPlan(request, arrangedPlan);
+  return PartyPlanSchema.parse({ ...arrangedPlan, ...(supplementation ? { supplementation } : {}) });
 }
 
 function assignConversationRoles(participants: PartyParticipantPlan[]): PartyParticipantPlan[] {

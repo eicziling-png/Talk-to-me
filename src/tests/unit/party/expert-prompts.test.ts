@@ -71,4 +71,29 @@ describe("party expert prompts", () => {
     expect(content).toContain("You may only respond to the user");
     expect(content).toContain("Never mention or agree with another expert");
   });
+
+  it("gives perspective supplements a short user-directed reference context", () => {
+    const expert = getExpert("kohut");
+    if (!expert) throw new Error("Expected Kohut profile");
+
+    const content = buildPartyExpertMessages(
+      request,
+      expert,
+      "补充被看见的需要",
+      "perspective",
+      "supporting_voice",
+      {
+        referenceContext: "先让这份感受有一个可以停留的地方。",
+        outputBudget: "supporting",
+        supplementationRole: "integrator"
+      }
+    )
+      .map((message) => message.content)
+      .join("\n");
+
+    expect(content).toContain("Perspective supplementation");
+    expect(content).toContain("<reference_context>");
+    expect(content).toContain("明显短于主要回应");
+    expect(content).toContain("不要提及或回应另一位专家");
+  });
 });

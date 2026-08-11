@@ -13,6 +13,8 @@ export type PartyConversationRequest = {
 
 export type PartyConversationRole = "reflection" | "perspective" | "support" | "question";
 export type PartyResponseRole = "primary_responder" | "supporting_voice" | "listener" | "questioner";
+export type PartySupplementationRole = "integrator";
+export type PartyOutputBudget = "primary" | "supporting" | "listener";
 
 export type PartyMessage =
   | {
@@ -36,6 +38,15 @@ export type PartyParticipantPlan = {
 export type PartyPlan = {
   participants: PartyParticipantPlan[];
   messageLimit: number;
+  supplementation?: PartyPerspectiveSupplement;
+};
+
+export type PartyPerspectiveSupplement = {
+  expertSlug: ExpertSlug;
+  supplementationRole: PartySupplementationRole;
+  referenceExpert: ExpertSlug;
+  outputBudget: "supporting";
+  layer: 1;
 };
 
 export type PartyStreamEvent =
