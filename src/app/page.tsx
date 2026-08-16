@@ -90,7 +90,6 @@ export default function Home() {
           <br />
           不提供诊断、治疗或临床服务。
         </p>
-        <Link href="/about">安全与隐私说明</Link>
       </div>
     </main>
   );

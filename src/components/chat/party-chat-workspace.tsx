@@ -181,9 +181,7 @@ export function PartyChatWorkspace() {
               <img alt="" aria-hidden="true" src="/figma/chat-chevron-left.svg" />
             </Link>
             <div className="selected-expert-card party-title-card">
-              <p id="party-chat-title">
-                Let&apos;s party :) <span aria-hidden="true"> | </span> 七位历史心理学家的共同房间
-              </p>
+              <p id="party-chat-title">Let&apos;s party :)</p>
             </div>
             <div aria-hidden="true" className="chat-header-spacer" />
             <details className="chat-menu">

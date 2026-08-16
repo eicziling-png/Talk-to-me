@@ -10,7 +10,7 @@ describe("home page", () => {
     expect(screen.getByText("对话过去的声音，靠近此刻的自己")).toBeVisible();
     expect(screen.getByText(/本工具为基于历史人物思想风格的角色模拟/)).toBeVisible();
     expect(screen.getByText(/不提供诊断、治疗或临床服务/)).toBeVisible();
-    expect(screen.getByRole("link", { name: "安全与隐私说明" })).toHaveAttribute("href", "/about");
+    expect(screen.queryByRole("link", { name: "安全与隐私说明" })).not.toBeInTheDocument();
     expect(screen.queryByText(/教育性角色模拟/)).not.toBeInTheDocument();
   });
 });

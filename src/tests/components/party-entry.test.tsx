@@ -31,7 +31,7 @@ describe("Let's party entry", () => {
 
     expect(screen.getByRole("region", { name: /Let's party/ })).toHaveClass("figma-chatpage", "party-chatpage");
     expect(screen.getByText(/Let's party :\)/)).toBeInTheDocument();
-    expect(screen.getByText(/七位历史心理学家/)).toBeInTheDocument();
+    expect(screen.queryByText(/七位历史心理学家/)).not.toBeInTheDocument();
     expect(screen.getByRole("textbox")).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "群聊参与者" })).not.toBeInTheDocument();
   });
